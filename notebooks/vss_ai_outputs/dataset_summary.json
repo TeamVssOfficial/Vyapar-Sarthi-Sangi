@@ -1,0 +1,70 @@
+{
+  "rows": 2823,
+  "columns": 25,
+  "duplicate_rows": 0,
+  "numeric_columns": [
+    "ORDERNUMBER",
+    "QUANTITYORDERED",
+    "PRICEEACH",
+    "ORDERLINENUMBER",
+    "SALES",
+    "QTR_ID",
+    "MONTH_ID",
+    "YEAR_ID",
+    "MSRP"
+  ],
+  "categorical_columns": [
+    "ORDERDATE",
+    "STATUS",
+    "PRODUCTLINE",
+    "PRODUCTCODE",
+    "CUSTOMERNAME",
+    "PHONE",
+    "ADDRESSLINE1",
+    "ADDRESSLINE2",
+    "CITY",
+    "STATE",
+    "POSTALCODE",
+    "COUNTRY",
+    "TERRITORY",
+    "CONTACTLASTNAME",
+    "CONTACTFIRSTNAME",
+    "DEALSIZE"
+  ],
+  "date_candidates": [
+    "ORDERDATE"
+  ],
+  "confirmed_metrics": {},
+  "ml_readiness": [
+    {
+      "check": "Has records",
+      "passed": true,
+      "details": "2,823 rows"
+    },
+    {
+      "check": "Has columns",
+      "passed": true,
+      "details": "25 columns"
+    },
+    {
+      "check": "Numeric features exist",
+      "passed": true,
+      "details": "9 numeric columns"
+    },
+    {
+      "check": "Categorical features exist",
+      "passed": true,
+      "details": "16 categorical columns"
+    },
+    {
+      "check": "Average missingness < 30%",
+      "passed": true,
+      "details": "7.3% average cell missingness"
+    },
+    {
+      "check": "At least 100 rows",
+      "passed": true,
+      "details": "2,823 rows"
+    }
+  ]
+}

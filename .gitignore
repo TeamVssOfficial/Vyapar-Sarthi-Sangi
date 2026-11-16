@@ -1,0 +1,30 @@
+# Environment & Secrets
+.env
+.env.*
+*.env
+
+# Data Files & Spreadsheets (Confidential Business Data)
+*.csv
+*.tsv
+*.xlsx
+*.xls
+storage/
+*.enc
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Python & Node compiled artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+node_modules/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
