@@ -147,6 +147,24 @@ export const API = {
       body: JSON.stringify(payload)
     });
   },
+  sendOtp(email, purpose = "password_reset") {
+    return this.request("/api/auth/send-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, purpose })
+    });
+  },
+  verifyOtp(email, otp) {
+    return this.request("/api/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp })
+    });
+  },
+  resetPassword(email, otp, new_password) {
+    return this.request("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, otp, new_password })
+    });
+  },
   demoLogin() {
     invalidateApiCache();
     return this.request("/api/auth/demo-login", {

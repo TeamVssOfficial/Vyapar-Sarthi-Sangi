@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     JWT_SECRET: str = os.getenv("JWT_SECRET", "vss_ai_production_jwt_secret_key")
 
+    # Free Email OTP Service (Gmail SMTP / Google App Password)
+    SMTP_EMAIL: str = os.getenv("SMTP_EMAIL", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"

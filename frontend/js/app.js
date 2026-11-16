@@ -221,19 +221,29 @@ function setupGlobalModals() {
   const tabRegister = document.getElementById("auth-tab-btn-register");
   const loginForm = document.getElementById("direct-login-form");
   const regForm = document.getElementById("direct-register-form");
+  const forgotForm = document.getElementById("direct-forgot-form");
+  const forgotStep1 = document.getElementById("forgot-step-1");
+  const forgotStep2 = document.getElementById("forgot-step-2");
   const authErr = document.getElementById("direct-auth-error");
 
-  tabLogin?.addEventListener("click", () => {
-    tabLogin.style.borderBottom = "2px solid var(--saffron)";
-    tabLogin.style.background = "#FFFFFF";
-    tabLogin.style.color = "var(--navy)";
-    tabRegister.style.borderBottom = "none";
-    tabRegister.style.background = "#F8FAFC";
-    tabRegister.style.color = "var(--slate)";
+  const showLoginForm = () => {
+    if (tabLogin) {
+      tabLogin.style.borderBottom = "2px solid var(--saffron)";
+      tabLogin.style.background = "#FFFFFF";
+      tabLogin.style.color = "var(--navy)";
+    }
+    if (tabRegister) {
+      tabRegister.style.borderBottom = "none";
+      tabRegister.style.background = "#F8FAFC";
+      tabRegister.style.color = "var(--slate)";
+    }
     if (loginForm) loginForm.style.display = "flex";
     if (regForm) regForm.style.display = "none";
+    if (forgotForm) forgotForm.style.display = "none";
     if (authErr) authErr.style.display = "none";
-  });
+  };
+
+  tabLogin?.addEventListener("click", showLoginForm);
 
   tabRegister?.addEventListener("click", () => {
     tabRegister.style.borderBottom = "2px solid var(--saffron)";
@@ -244,7 +254,116 @@ function setupGlobalModals() {
     tabLogin.style.color = "var(--slate)";
     if (loginForm) loginForm.style.display = "none";
     if (regForm) regForm.style.display = "flex";
+    if (forgotForm) forgotForm.style.display = "none";
     if (authErr) authErr.style.display = "none";
+  });
+
+  // Switch to Forgot Password / OTP form
+  document.getElementById("btn-show-forgot-form")?.addEventListener("click", () => {
+    if (loginForm) loginForm.style.display = "none";
+    if (regForm) regForm.style.display = "none";
+    if (forgotForm) forgotForm.style.display = "flex";
+    if (forgotStep1) forgotStep1.style.display = "block";
+    if (forgotStep2) forgotStep2.style.display = "none";
+    if (authErr) authErr.style.display = "none";
+    const loginEmail = document.getElementById("auth-login-email")?.value?.trim();
+    const forgotEmail = document.getElementById("auth-forgot-email");
+    if (loginEmail && forgotEmail) forgotEmail.value = loginEmail;
+  });
+
+  document.getElementById("btn-back-to-login")?.addEventListener("click", showLoginForm);
+
+  // Send OTP handler
+  document.getElementById("btn-request-otp")?.addEventListener("click", async () => {
+    const email = document.getElementById("auth-forgot-email")?.value?.trim();
+    const btn = document.getElementById("btn-request-otp");
+    if (!email) {
+      if (authErr) {
+        authErr.style.display = "block";
+        authErr.style.background = "#FEE2E2";
+        authErr.style.color = "#DC2626";
+        authErr.innerText = "Please enter your registered corporate email.";
+      }
+      return;
+    }
+    if (authErr) authErr.style.display = "none";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "Sending OTP...";
+    }
+
+    try {
+      await API.sendOtp(email);
+      if (forgotStep1) forgotStep1.style.display = "none";
+      if (forgotStep2) forgotStep2.style.display = "block";
+    } catch (err) {
+      if (authErr) {
+        authErr.style.display = "block";
+        authErr.style.background = "#FEE2E2";
+        authErr.style.color = "#DC2626";
+        authErr.innerText = err.message || "Failed to send OTP.";
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = "Send OTP to Email";
+      }
+    }
+  });
+
+  // Reset Password with OTP submit handler
+  forgotForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-forgot-email")?.value?.trim();
+    const otp = document.getElementById("auth-forgot-otp")?.value?.trim();
+    const newPassword = document.getElementById("auth-forgot-new-pwd")?.value;
+    const submitBtn = document.getElementById("btn-submit-reset-pwd");
+
+    if (authErr) authErr.style.display = "none";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Verifying & Updating...";
+    }
+
+    try {
+      const res = await API.resetPassword(email, otp, newPassword);
+      if (authErr) {
+        authErr.style.display = "block";
+        authErr.style.background = "#ECFDF5";
+        authErr.style.color = "#065F46";
+        authErr.innerText = "✓ Password updated successfully! Signing you in...";
+      }
+      // Auto-login with new credentials
+      setTimeout(async () => {
+        try {
+          const data = await API.login({ email, password: newPassword });
+          API.setToken(data.token);
+          if (data.businesses && data.businesses.length > 0) {
+            API.setActiveBusinessId(data.businesses[0].id);
+          }
+          closeDirectAuthModal();
+          showLoginForm();
+          updateUserUI(data.user, data.businesses);
+          handleRoute();
+        } catch {
+          showLoginForm();
+          const loginEmail = document.getElementById("auth-login-email");
+          if (loginEmail) loginEmail.value = email;
+        }
+      }, 1000);
+    } catch (err) {
+      if (authErr) {
+        authErr.style.display = "block";
+        authErr.style.background = "#FEE2E2";
+        authErr.style.color = "#DC2626";
+        authErr.innerText = err.message || "Invalid OTP code or password reset error.";
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Verify OTP & Reset Password";
+      }
+    }
   });
 
   document.getElementById("btn-close-auth-modal")?.addEventListener("click", closeDirectAuthModal);

@@ -190,7 +190,33 @@
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--slate); margin-bottom: 4px;">Password</label>
             <input type="password" id="auth-login-password" required placeholder="••••••••" />
           </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: -4px;">
+            <button type="button" id="btn-show-forgot-form" style="background: none; border: none; font-size: 11px; color: var(--navy); font-weight: 600; cursor: pointer; padding: 0;">Forgot Password? (Get OTP)</button>
+          </div>
           <button type="submit" id="btn-submit-direct-login" class="btn btn-primary" style="margin-top: 6px; padding: 10px;">Sign In to Workspace</button>
+        </form>
+
+        <!-- Forgot Password / OTP Reset Form -->
+        <form id="direct-forgot-form" style="display: none; flex-direction: column; gap: 12px;">
+          <div id="forgot-step-1">
+            <p style="font-size: 12px; color: var(--slate); margin-bottom: 8px; line-height: 1.4;">Enter your registered corporate email to receive a 6-digit verification OTP code.</p>
+            <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--slate); margin-bottom: 4px;">Registered Email</label>
+            <input type="email" id="auth-forgot-email" placeholder="director@enterprise.com" />
+            <button type="button" id="btn-request-otp" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 10px;">Send OTP to Email</button>
+          </div>
+          <div id="forgot-step-2" style="display: none;">
+            <div style="background: #ECFDF5; border: 1px solid #10B981; color: #065F46; padding: 8px 12px; border-radius: 6px; font-size: 11px; margin-bottom: 10px;">
+              ✓ Verification OTP sent! Check your inbox or spam folder.
+            </div>
+            <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--slate); margin-bottom: 4px;">6-Digit OTP Code</label>
+            <input type="text" id="auth-forgot-otp" maxlength="6" placeholder="123456" style="letter-spacing: 4px; font-weight: 700; text-align: center;" />
+            <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--slate); margin-top: 8px; margin-bottom: 4px;">New Password (Min 8 Characters)</label>
+            <input type="password" id="auth-forgot-new-pwd" minlength="8" placeholder="••••••••" />
+            <button type="submit" id="btn-submit-reset-pwd" class="btn btn-saffron" style="width: 100%; margin-top: 10px; padding: 10px;">Verify OTP & Reset Password</button>
+          </div>
+          <div style="text-align: center; margin-top: 6px;">
+            <button type="button" id="btn-back-to-login" style="background: none; border: none; font-size: 11px; color: var(--slate); cursor: pointer; text-decoration: underline;">Back to Sign In</button>
+          </div>
         </form>
 
         <!-- Register Form -->
