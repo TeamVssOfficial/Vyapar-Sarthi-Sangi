@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application files
 COPY frontend/ /app/frontend/
 COPY pybackend/ /app/pybackend/
+COPY start.py /app/start.py
 
 # Create storage directories
 RUN mkdir -p /app/storage/uploads /app/storage/processed /app/storage/reports /app/storage/models
@@ -26,5 +27,5 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-# Start FastAPI server
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --app-dir /app/pybackend
+# Start FastAPI server via robust Python entrypoint
+CMD ["python", "/app/start.py"]
