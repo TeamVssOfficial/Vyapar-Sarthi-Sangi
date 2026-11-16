@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: vyapar-sarthi-sangi
+    env: python
+    buildCommand: "pip install -r pybackend/requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir pybackend"
+    envVars:
+      - key: MongDB
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DB_NAME
+        value: test
