@@ -33,62 +33,7 @@ export function closeDirectUploadModal() {
   if (modal) modal.style.display = "none";
 }
 
-export function switchAuthTab(tab = "login") {
-  const tabLogin = document.getElementById("auth-tab-btn-login");
-  const tabRegister = document.getElementById("auth-tab-btn-register");
-  const tabOtp = document.getElementById("auth-tab-btn-otp");
-  const loginForm = document.getElementById("direct-login-form");
-  const regForm = document.getElementById("direct-register-form");
-  const forgotForm = document.getElementById("direct-forgot-form");
-  const forgotStep1 = document.getElementById("forgot-step-1");
-  const forgotStep2 = document.getElementById("forgot-step-2");
-  const authErr = document.getElementById("direct-auth-error");
-
-  if (authErr) authErr.style.display = "none";
-
-  const resetTabStyle = (btn) => {
-    if (!btn) return;
-    btn.style.borderBottom = "none";
-    btn.style.background = "#F8FAFC";
-    btn.style.color = "var(--slate)";
-  };
-
-  const activeTabStyle = (btn) => {
-    if (!btn) return;
-    btn.style.borderBottom = "2px solid var(--saffron)";
-    btn.style.background = "#FFFFFF";
-    btn.style.color = "var(--navy)";
-  };
-
-  resetTabStyle(tabLogin);
-  resetTabStyle(tabRegister);
-  resetTabStyle(tabOtp);
-
-  if (loginForm) loginForm.style.display = "none";
-  if (regForm) regForm.style.display = "none";
-  if (forgotForm) forgotForm.style.display = "none";
-
-  if (tab === "otp") {
-    activeTabStyle(tabOtp);
-    if (forgotForm) forgotForm.style.display = "flex";
-    if (forgotStep1) forgotStep1.style.display = "block";
-    if (forgotStep2) forgotStep2.style.display = "none";
-    const loginEmail = document.getElementById("auth-login-email")?.value?.trim();
-    const forgotEmail = document.getElementById("auth-forgot-email");
-    if (loginEmail && forgotEmail && !forgotEmail.value) {
-      forgotEmail.value = loginEmail;
-    }
-    setTimeout(() => forgotEmail?.focus(), 100);
-  } else if (tab === "register") {
-    activeTabStyle(tabRegister);
-    if (regForm) regForm.style.display = "flex";
-  } else {
-    activeTabStyle(tabLogin);
-    if (loginForm) loginForm.style.display = "flex";
-  }
-}
-
-export function openDirectAuthModal(message, defaultTab = "login") {
+export function openDirectAuthModal(message) {
   const modal = document.getElementById("direct-auth-modal");
   const authErr = document.getElementById("direct-auth-error");
   if (authErr) {
@@ -102,7 +47,6 @@ export function openDirectAuthModal(message, defaultTab = "login") {
       authErr.style.display = "none";
     }
   }
-  switchAuthTab(defaultTab);
   if (modal) modal.style.display = "flex";
 }
 
@@ -272,117 +216,35 @@ function setupGlobalModals() {
     });
   }
 
-  // Top Email OTP Button
-  document.getElementById("top-otp-btn")?.addEventListener("click", () => {
-    openDirectAuthModal(null, "otp");
-  });
-
   // Modal Auth Tabs
   const tabLogin = document.getElementById("auth-tab-btn-login");
   const tabRegister = document.getElementById("auth-tab-btn-register");
-  const tabOtp = document.getElementById("auth-tab-btn-otp");
-  const forgotForm = document.getElementById("direct-forgot-form");
-  const forgotStep1 = document.getElementById("forgot-step-1");
-  const forgotStep2 = document.getElementById("forgot-step-2");
+  const loginForm = document.getElementById("direct-login-form");
+  const regForm = document.getElementById("direct-register-form");
   const authErr = document.getElementById("direct-auth-error");
 
-  tabLogin?.addEventListener("click", () => switchAuthTab("login"));
-  tabRegister?.addEventListener("click", () => switchAuthTab("register"));
-  tabOtp?.addEventListener("click", () => switchAuthTab("otp"));
-  document.getElementById("btn-show-forgot-form")?.addEventListener("click", () => switchAuthTab("otp"));
-  document.getElementById("btn-back-to-login")?.addEventListener("click", () => switchAuthTab("login"));
-
-  // Send OTP handler
-  document.getElementById("btn-request-otp")?.addEventListener("click", async () => {
-    const email = document.getElementById("auth-forgot-email")?.value?.trim();
-    const btn = document.getElementById("btn-request-otp");
-    if (!email) {
-      if (authErr) {
-        authErr.style.display = "block";
-        authErr.style.background = "#FEE2E2";
-        authErr.style.color = "#DC2626";
-        authErr.innerText = "Please enter your registered corporate email.";
-      }
-      return;
-    }
+  tabLogin?.addEventListener("click", () => {
+    tabLogin.style.borderBottom = "2px solid var(--saffron)";
+    tabLogin.style.background = "#FFFFFF";
+    tabLogin.style.color = "var(--navy)";
+    tabRegister.style.borderBottom = "none";
+    tabRegister.style.background = "#F8FAFC";
+    tabRegister.style.color = "var(--slate)";
+    if (loginForm) loginForm.style.display = "flex";
+    if (regForm) regForm.style.display = "none";
     if (authErr) authErr.style.display = "none";
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = "Sending OTP...";
-    }
-
-    try {
-      await API.sendOtp(email);
-      if (forgotStep1) forgotStep1.style.display = "none";
-      if (forgotStep2) forgotStep2.style.display = "block";
-    } catch (err) {
-      if (authErr) {
-        authErr.style.display = "block";
-        authErr.style.background = "#FEE2E2";
-        authErr.style.color = "#DC2626";
-        authErr.innerText = err.message || "Failed to send OTP.";
-      }
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerText = "Send OTP to Email";
-      }
-    }
   });
 
-  // Reset Password with OTP submit handler
-  forgotForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("auth-forgot-email")?.value?.trim();
-    const otp = document.getElementById("auth-forgot-otp")?.value?.trim();
-    const newPassword = document.getElementById("auth-forgot-new-pwd")?.value;
-    const submitBtn = document.getElementById("btn-submit-reset-pwd");
-
+  tabRegister?.addEventListener("click", () => {
+    tabRegister.style.borderBottom = "2px solid var(--saffron)";
+    tabRegister.style.background = "#FFFFFF";
+    tabRegister.style.color = "var(--navy)";
+    tabLogin.style.borderBottom = "none";
+    tabLogin.style.background = "#F8FAFC";
+    tabLogin.style.color = "var(--slate)";
+    if (loginForm) loginForm.style.display = "none";
+    if (regForm) regForm.style.display = "flex";
     if (authErr) authErr.style.display = "none";
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Verifying & Updating...";
-    }
-
-    try {
-      const res = await API.resetPassword(email, otp, newPassword);
-      if (authErr) {
-        authErr.style.display = "block";
-        authErr.style.background = "#ECFDF5";
-        authErr.style.color = "#065F46";
-        authErr.innerText = "✓ Password updated successfully! Signing you in...";
-      }
-      // Auto-login with new credentials
-      setTimeout(async () => {
-        try {
-          const data = await API.login({ email, password: newPassword });
-          API.setToken(data.token);
-          if (data.businesses && data.businesses.length > 0) {
-            API.setActiveBusinessId(data.businesses[0].id);
-          }
-          closeDirectAuthModal();
-          showLoginForm();
-          updateUserUI(data.user, data.businesses);
-          handleRoute();
-        } catch {
-          showLoginForm();
-          const loginEmail = document.getElementById("auth-login-email");
-          if (loginEmail) loginEmail.value = email;
-        }
-      }, 1000);
-    } catch (err) {
-      if (authErr) {
-        authErr.style.display = "block";
-        authErr.style.background = "#FEE2E2";
-        authErr.style.color = "#DC2626";
-        authErr.innerText = err.message || "Invalid OTP code or password reset error.";
-      }
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Verify OTP & Reset Password";
-      }
-    }
   });
 
   document.getElementById("btn-close-auth-modal")?.addEventListener("click", closeDirectAuthModal);
@@ -703,9 +565,5 @@ export async function handleRoute() {
   }
 }
 
-// Start app safely on DOM ready (guarantees execution even if DOMContentLoaded already fired)
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initApp);
-} else {
-  initApp();
-}
+// Start app on DOMContentLoaded
+window.addEventListener("DOMContentLoaded", initApp);

@@ -30,7 +30,6 @@ export async function renderOverview(container) {
             </div>
 
             <button id="os-btn-login" class="btn btn-saffron" style="font-size: 11px; padding: 6px 14px;">Sign In / Switch</button>
-            <button id="os-btn-otp" class="btn" style="background: rgba(234, 88, 12, 0.2); color: #FDBA74; border: 1px solid rgba(234, 88, 12, 0.4); font-size: 11px; padding: 6px 12px; font-weight: 700; cursor: pointer;">✉️ Email OTP</button>
             <button id="os-btn-logout" class="btn" style="display: none; background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 11px; padding: 6px 12px;">Logout</button>
             <button id="os-btn-settings" class="btn" style="background: rgba(255,255,255,0.1); color: #FFFFFF; border: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 6px 12px;">Settings</button>
           </div>
@@ -71,12 +70,6 @@ export async function renderOverview(container) {
               <button id="btn-hero-upload" class="btn" style="background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 13px; padding: 10px 18px; font-weight: 700;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 Upload CSV / Excel
-              </button>
-
-              <!-- Verify with Email OTP -->
-              <button id="btn-hero-otp" class="btn" style="background: rgba(234, 88, 12, 0.2); color: #FDBA74; border: 1px solid rgba(234, 88, 12, 0.45); font-size: 13px; padding: 10px 18px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" title="Verify or Reset Access via Email OTP">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                Email OTP
               </button>
             </div>
           </div>
@@ -689,14 +682,6 @@ export async function renderOverview(container) {
 
   btnLogin?.addEventListener("click", () => {
     if (window.openDirectAuthModal) window.openDirectAuthModal();
-  });
-
-  document.getElementById("os-btn-otp")?.addEventListener("click", () => {
-    if (window.openDirectAuthModal) window.openDirectAuthModal(null, "otp");
-  });
-
-  document.getElementById("btn-hero-otp")?.addEventListener("click", () => {
-    if (window.openDirectAuthModal) window.openDirectAuthModal(null, "otp");
   });
 
   btnLogout?.addEventListener("click", async () => {

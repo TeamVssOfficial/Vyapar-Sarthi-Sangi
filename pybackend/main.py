@@ -79,17 +79,17 @@ def home(request: Request):
     if request.method == "HEAD":
         return Response(status_code=200)
     accept_header = request.headers.get("accept", "")
-    if "application/json" in accept_header and "text/html" not in accept_header:
-        return {
-            "product": "Vyapar Sarthi Sangi",
-            "short_name": "VSS AI",
-            "tagline": "Your Business. One System. One Intelligent Sarthi.",
-            "status": "online",
-            "version": settings.APP_VERSION,
-            "app_url": "/app/",
-            "docs_url": "/docs"
-        }
-    return RedirectResponse(url="/app/")
+    if "text/html" in accept_header:
+        return RedirectResponse(url="/app/")
+    return {
+        "product": "Vyapar Sarthi Sangi",
+        "short_name": "VSS AI",
+        "tagline": "Your Business. One System. One Intelligent Sarthi.",
+        "status": "online",
+        "version": settings.APP_VERSION,
+        "app_url": "/app/",
+        "docs_url": "/docs"
+    }
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -117,10 +117,9 @@ if __name__ == "__main__":
         port = int(raw_port)
     except (ValueError, TypeError):
         port = 8000
-    host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
     uvicorn.run(
         "main:app",
-        host=host,
+        host="0.0.0.0",
         port=port,
         reload=False
     )
