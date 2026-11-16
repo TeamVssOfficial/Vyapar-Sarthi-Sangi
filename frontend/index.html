@@ -111,6 +111,12 @@
 
       <!-- Right Top Actions: Direct Upload Button & Direct Login Button -->
       <div style="display: flex; align-items: center; gap: 10px;">
+        <!-- DIRECT EMAIL OTP BUTTON (Always Visible on Main Page) -->
+        <button id="top-otp-btn" class="btn" style="background: rgba(234, 88, 12, 0.12); color: #EA580C; border: 1px solid rgba(234, 88, 12, 0.4); font-size: 12px; padding: 6px 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" title="Verify or Reset Access via Email OTP">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          Email OTP
+        </button>
+
         <!-- DIRECT UPLOAD BUTTON (Always Visible) -->
         <button id="top-direct-upload-btn" class="btn btn-saffron" style="font-size: 12px; padding: 6px 14px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -175,6 +181,7 @@
       <div style="display: flex; border-bottom: 1px solid var(--border-color); background: #F8FAFC;">
         <button id="auth-tab-btn-login" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; border-bottom: 2px solid var(--saffron); background: #FFFFFF; color: var(--navy);">Sign In</button>
         <button id="auth-tab-btn-register" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; background: #F8FAFC; color: var(--slate);">Register Business</button>
+        <button id="auth-tab-btn-otp" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; background: #F8FAFC; color: var(--slate);">✉️ Email OTP</button>
       </div>
 
       <div style="padding: 24px;">

@@ -33,7 +33,62 @@ export function closeDirectUploadModal() {
   if (modal) modal.style.display = "none";
 }
 
-export function openDirectAuthModal(message) {
+export function switchAuthTab(tab = "login") {
+  const tabLogin = document.getElementById("auth-tab-btn-login");
+  const tabRegister = document.getElementById("auth-tab-btn-register");
+  const tabOtp = document.getElementById("auth-tab-btn-otp");
+  const loginForm = document.getElementById("direct-login-form");
+  const regForm = document.getElementById("direct-register-form");
+  const forgotForm = document.getElementById("direct-forgot-form");
+  const forgotStep1 = document.getElementById("forgot-step-1");
+  const forgotStep2 = document.getElementById("forgot-step-2");
+  const authErr = document.getElementById("direct-auth-error");
+
+  if (authErr) authErr.style.display = "none";
+
+  const resetTabStyle = (btn) => {
+    if (!btn) return;
+    btn.style.borderBottom = "none";
+    btn.style.background = "#F8FAFC";
+    btn.style.color = "var(--slate)";
+  };
+
+  const activeTabStyle = (btn) => {
+    if (!btn) return;
+    btn.style.borderBottom = "2px solid var(--saffron)";
+    btn.style.background = "#FFFFFF";
+    btn.style.color = "var(--navy)";
+  };
+
+  resetTabStyle(tabLogin);
+  resetTabStyle(tabRegister);
+  resetTabStyle(tabOtp);
+
+  if (loginForm) loginForm.style.display = "none";
+  if (regForm) regForm.style.display = "none";
+  if (forgotForm) forgotForm.style.display = "none";
+
+  if (tab === "otp") {
+    activeTabStyle(tabOtp);
+    if (forgotForm) forgotForm.style.display = "flex";
+    if (forgotStep1) forgotStep1.style.display = "block";
+    if (forgotStep2) forgotStep2.style.display = "none";
+    const loginEmail = document.getElementById("auth-login-email")?.value?.trim();
+    const forgotEmail = document.getElementById("auth-forgot-email");
+    if (loginEmail && forgotEmail && !forgotEmail.value) {
+      forgotEmail.value = loginEmail;
+    }
+    setTimeout(() => forgotEmail?.focus(), 100);
+  } else if (tab === "register") {
+    activeTabStyle(tabRegister);
+    if (regForm) regForm.style.display = "flex";
+  } else {
+    activeTabStyle(tabLogin);
+    if (loginForm) loginForm.style.display = "flex";
+  }
+}
+
+export function openDirectAuthModal(message, defaultTab = "login") {
   const modal = document.getElementById("direct-auth-modal");
   const authErr = document.getElementById("direct-auth-error");
   if (authErr) {
@@ -47,6 +102,7 @@ export function openDirectAuthModal(message) {
       authErr.style.display = "none";
     }
   }
+  switchAuthTab(defaultTab);
   if (modal) modal.style.display = "flex";
 }
 
@@ -216,62 +272,25 @@ function setupGlobalModals() {
     });
   }
 
+  // Top Email OTP Button
+  document.getElementById("top-otp-btn")?.addEventListener("click", () => {
+    openDirectAuthModal(null, "otp");
+  });
+
   // Modal Auth Tabs
   const tabLogin = document.getElementById("auth-tab-btn-login");
   const tabRegister = document.getElementById("auth-tab-btn-register");
-  const loginForm = document.getElementById("direct-login-form");
-  const regForm = document.getElementById("direct-register-form");
+  const tabOtp = document.getElementById("auth-tab-btn-otp");
   const forgotForm = document.getElementById("direct-forgot-form");
   const forgotStep1 = document.getElementById("forgot-step-1");
   const forgotStep2 = document.getElementById("forgot-step-2");
   const authErr = document.getElementById("direct-auth-error");
 
-  const showLoginForm = () => {
-    if (tabLogin) {
-      tabLogin.style.borderBottom = "2px solid var(--saffron)";
-      tabLogin.style.background = "#FFFFFF";
-      tabLogin.style.color = "var(--navy)";
-    }
-    if (tabRegister) {
-      tabRegister.style.borderBottom = "none";
-      tabRegister.style.background = "#F8FAFC";
-      tabRegister.style.color = "var(--slate)";
-    }
-    if (loginForm) loginForm.style.display = "flex";
-    if (regForm) regForm.style.display = "none";
-    if (forgotForm) forgotForm.style.display = "none";
-    if (authErr) authErr.style.display = "none";
-  };
-
-  tabLogin?.addEventListener("click", showLoginForm);
-
-  tabRegister?.addEventListener("click", () => {
-    tabRegister.style.borderBottom = "2px solid var(--saffron)";
-    tabRegister.style.background = "#FFFFFF";
-    tabRegister.style.color = "var(--navy)";
-    tabLogin.style.borderBottom = "none";
-    tabLogin.style.background = "#F8FAFC";
-    tabLogin.style.color = "var(--slate)";
-    if (loginForm) loginForm.style.display = "none";
-    if (regForm) regForm.style.display = "flex";
-    if (forgotForm) forgotForm.style.display = "none";
-    if (authErr) authErr.style.display = "none";
-  });
-
-  // Switch to Forgot Password / OTP form
-  document.getElementById("btn-show-forgot-form")?.addEventListener("click", () => {
-    if (loginForm) loginForm.style.display = "none";
-    if (regForm) regForm.style.display = "none";
-    if (forgotForm) forgotForm.style.display = "flex";
-    if (forgotStep1) forgotStep1.style.display = "block";
-    if (forgotStep2) forgotStep2.style.display = "none";
-    if (authErr) authErr.style.display = "none";
-    const loginEmail = document.getElementById("auth-login-email")?.value?.trim();
-    const forgotEmail = document.getElementById("auth-forgot-email");
-    if (loginEmail && forgotEmail) forgotEmail.value = loginEmail;
-  });
-
-  document.getElementById("btn-back-to-login")?.addEventListener("click", showLoginForm);
+  tabLogin?.addEventListener("click", () => switchAuthTab("login"));
+  tabRegister?.addEventListener("click", () => switchAuthTab("register"));
+  tabOtp?.addEventListener("click", () => switchAuthTab("otp"));
+  document.getElementById("btn-show-forgot-form")?.addEventListener("click", () => switchAuthTab("otp"));
+  document.getElementById("btn-back-to-login")?.addEventListener("click", () => switchAuthTab("login"));
 
   // Send OTP handler
   document.getElementById("btn-request-otp")?.addEventListener("click", async () => {
