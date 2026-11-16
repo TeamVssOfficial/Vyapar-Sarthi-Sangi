@@ -73,8 +73,10 @@ if frontend_dir.is_dir():
     app.mount("/app", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def home(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
     accept_header = request.headers.get("accept", "")
     if "text/html" in accept_header:
         return RedirectResponse(url="/app/")
@@ -89,8 +91,11 @@ def home(request: Request):
     }
 
 
-@app.get("/health")
-def health():
+@app.api_route("/health", methods=["GET", "HEAD"])
+@app.api_route("/api/health", methods=["GET", "HEAD"])
+def health(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
     return {
         "status": "healthy",
         "service": "VSS AI Backend Core",
@@ -98,7 +103,7 @@ def health():
     }
 
 
-@app.get("/favicon.ico", include_in_schema=False)
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"], include_in_schema=False)
 def favicon():
     return Response(status_code=204)
 
