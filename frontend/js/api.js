@@ -1,5 +1,8 @@
 // VSS AI Core API Client
-const API_BASE = window.location.origin.includes(":8000") ? "" : "http://localhost:8000";
+// Automatically use relative path when hosted together with backend (Render, cloud, or FastAPI on :8000),
+// or target http://localhost:8000 when frontend is served from an independent dev server (e.g., Vite/Live Server on port 3000/5173/5500).
+const isStandaloneDev = window.location.hostname === "localhost" && window.location.port !== "8000" && window.location.port !== "";
+const API_BASE = isStandaloneDev ? "http://localhost:8000" : "";
 
 // High-speed In-Memory Cache & In-Flight Promise De-duplication
 const _apiCache = new Map();
