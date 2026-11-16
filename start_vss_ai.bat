@@ -16,7 +16,7 @@ start http://localhost:8000/app/
 
 echo.
 echo Starting VSS AI Intelligence Backend Core (Port 8000)...
-echo Connected seamlessly with Node.js login system & Data Engine.
+echo Connected seamlessly with Node.js login system and Data Engine.
 echo.
 
 cd /d "%~dp0pybackend"

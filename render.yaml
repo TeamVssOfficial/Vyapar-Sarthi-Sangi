@@ -3,7 +3,7 @@ services:
     name: vyapar-sarthi-sangi
     env: python
     buildCommand: "pip install -r pybackend/requirements.txt"
-    startCommand: "python start.py"
+    startCommand: "cd pybackend && python main.py"
     envVars:
       - key: MongDB
         sync: false

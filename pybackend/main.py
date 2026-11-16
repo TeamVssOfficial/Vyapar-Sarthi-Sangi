@@ -117,9 +117,10 @@ if __name__ == "__main__":
         port = int(raw_port)
     except (ValueError, TypeError):
         port = 8000
+    host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host=host,
         port=port,
         reload=False
     )
