@@ -2,7 +2,7 @@ services:
   - type: web
     name: vyapar-sarthi-sangi
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r pybackend/requirements.txt"
     startCommand: "python start.py"
     envVars:
       - key: MongDB
