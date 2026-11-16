@@ -703,5 +703,9 @@ export async function handleRoute() {
   }
 }
 
-// Start app on DOMContentLoaded
-window.addEventListener("DOMContentLoaded", initApp);
+// Start app safely on DOM ready (guarantees execution even if DOMContentLoaded already fired)
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
