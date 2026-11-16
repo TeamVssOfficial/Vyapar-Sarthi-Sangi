@@ -16,9 +16,10 @@ if __name__ == "__main__":
     print(f" Starting Vyapar Sarthi Sangi Server on port {port}")
     print(f"==================================================")
 
+    host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host=host,
         port=port,
         app_dir=pybackend_dir
     )
