@@ -79,17 +79,17 @@ def home(request: Request):
     if request.method == "HEAD":
         return Response(status_code=200)
     accept_header = request.headers.get("accept", "")
-    if "text/html" in accept_header:
-        return RedirectResponse(url="/app/")
-    return {
-        "product": "Vyapar Sarthi Sangi",
-        "short_name": "VSS AI",
-        "tagline": "Your Business. One System. One Intelligent Sarthi.",
-        "status": "online",
-        "version": settings.APP_VERSION,
-        "app_url": "/app/",
-        "docs_url": "/docs"
-    }
+    if "application/json" in accept_header and "text/html" not in accept_header:
+        return {
+            "product": "Vyapar Sarthi Sangi",
+            "short_name": "VSS AI",
+            "tagline": "Your Business. One System. One Intelligent Sarthi.",
+            "status": "online",
+            "version": settings.APP_VERSION,
+            "app_url": "/app/",
+            "docs_url": "/docs"
+        }
+    return RedirectResponse(url="/app/")
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
