@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add pybackend directory to sys.path so imports work regardless of execution working directory
+_BASE_DIR = Path(__file__).resolve().parent
+if str(_BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(_BASE_DIR))
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
