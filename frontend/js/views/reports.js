@@ -69,28 +69,17 @@ export async function renderReports(container) {
               Synthesizes commercial KPIs, sales velocity, category revenue share, working capital receivables, data health scores, and strategic directives into a 2-page boardroom presentation.
             </p>
 
-            <!-- PDF Customization Controls -->
+            <!-- PDF Customization Controls (Corporate Light Standard) -->
             <div class="export-config-panel">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
                 <!-- Language Option -->
                 <div>
                   <label class="export-field-label">
-                    Language / भाषा
+                    Report Language / भाषा
                   </label>
                   <select id="pdf-opt-language" class="export-control-select">
                     <option value="en" selected>Executive English (Boardroom Standard)</option>
                     <option value="bilingual">Bilingual (English + Hindi Context)</option>
-                  </select>
-                </div>
-
-                <!-- Theme Option -->
-                <div>
-                  <label class="export-field-label">
-                    Theme / थीम
-                  </label>
-                  <select id="pdf-opt-theme" class="export-control-select">
-                    <option value="light" selected>Corporate Light (लाइट)</option>
-                    <option value="dark">Executive Dark (डार्क)</option>
                   </select>
                 </div>
               </div>
@@ -314,24 +303,23 @@ export async function renderReports(container) {
   const btnPdf = container.querySelector("#btn-generate-pdf");
   if (btnPdf) {
     btnPdf.onclick = async () => {
-      const lang = container.querySelector("#pdf-opt-language")?.value || "bilingual";
-      const theme = container.querySelector("#pdf-opt-theme")?.value || "light";
+      const lang = container.querySelector("#pdf-opt-language")?.value || "en";
       const includeCharts = !!container.querySelector("#pdf-opt-charts")?.checked;
 
       btnPdf.disabled = true;
       btnPdf.innerHTML = `<span>⏳</span> Compiling Executive PDF...`;
-      showStatus("Generating executive boardroom PDF briefing with high-resolution visual charts & bilingual typography...", "info");
+      showStatus("Generating executive boardroom PDF briefing with high-resolution visual charts...", "info");
 
       try {
         const res = await API.generateReport(activeDatasetId, "pdf", {
           language: lang,
-          theme: theme,
+          theme: "light",
           include_charts: includeCharts,
-          title: `Executive Intelligence Briefing (${theme.toUpperCase()} - ${lang.toUpperCase()})`
+          title: `Executive Intelligence Briefing (${lang.toUpperCase()})`
         });
 
         const dlUrl = API.getDownloadUrl(res.report_id);
-        showStatus(`✓ Executive PDF successfully generated and saved! (${theme.toUpperCase()} Theme, ${lang.toUpperCase()})`, "success", dlUrl, res.report_id, res.title);
+        showStatus(`✓ Executive PDF successfully generated and saved! (Corporate Light, ${lang.toUpperCase()})`, "success", dlUrl, res.report_id, res.title);
         await loadReportsTable();
       } catch (err) {
         showStatus(`Error generating PDF: ${err.message}`, "error");
@@ -370,13 +358,6 @@ export async function renderReports(container) {
         `;
       }
     };
-  }
-
-  // Sync active theme with PDF dropdown
-  const curTheme = document.documentElement.getAttribute("data-theme") || "light";
-  const pdfThemeSelect = container.querySelector("#pdf-opt-theme");
-  if (pdfThemeSelect) {
-    pdfThemeSelect.value = curTheme;
   }
 
   // Initial load of history

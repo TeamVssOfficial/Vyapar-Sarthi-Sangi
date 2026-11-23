@@ -133,64 +133,35 @@ window.openDirectAuthModal = openDirectAuthModal;
 window.closeDirectAuthModal = closeDirectAuthModal;
 
 // ==========================================
-// App Theme Manager (Dark / Light Mode)
+// App Theme Manager (Corporate Light Mode Locked)
 // ==========================================
 export function getInitialTheme() {
-  const saved = localStorage.getItem("vss_theme");
-  if (saved === "dark" || saved === "light") return saved;
-  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    return "dark";
-  }
   return "light";
 }
 
-export function applyTheme(theme) {
-  const isDark = (theme === "dark");
-  document.documentElement.setAttribute("data-theme", theme);
+export function applyTheme(theme = "light") {
+  document.documentElement.setAttribute("data-theme", "light");
   if (document.body) {
-    document.body.classList.toggle("dark-mode", isDark);
+    document.body.classList.remove("dark-mode");
   }
-  localStorage.setItem("vss_theme", theme);
+  localStorage.setItem("vss_theme", "light");
 
-  const btn = document.getElementById("top-theme-toggle-btn");
-  if (btn) {
-    const icon = btn.querySelector("#theme-btn-icon");
-    const text = btn.querySelector("#theme-btn-text");
-    if (icon) icon.innerText = isDark ? "☀️" : "🌙";
-    if (text) text.innerText = isDark ? "Light" : "Dark";
-    btn.setAttribute("title", isDark ? "Switch to Corporate Light Mode" : "Switch to Executive Dark Mode");
-  }
-
-  // Sync with Reports PDF Theme dropdown if open
-  const pdfThemeSelect = document.getElementById("pdf-opt-theme");
-  if (pdfThemeSelect) {
-    pdfThemeSelect.value = theme;
-  }
-
-  // Dispatch custom event for views to re-theme their canvas/charts (like Plotly)
-  window.dispatchEvent(new CustomEvent("vss:theme_changed", { detail: { theme, isDark } }));
+  // Dispatch custom event for views to maintain light styling across canvas/charts
+  window.dispatchEvent(new CustomEvent("vss:theme_changed", { detail: { theme: "light", isDark: false } }));
 }
 
 export function toggleTheme() {
-  const current = document.documentElement.getAttribute("data-theme") || "light";
-  const next = (current === "dark") ? "light" : "dark";
-  applyTheme(next);
+  applyTheme("light");
 }
 
 window.applyTheme = applyTheme;
 window.toggleTheme = toggleTheme;
 window.getInitialTheme = getInitialTheme;
 
-// Apply theme immediately before rendering
-applyTheme(getInitialTheme());
+// Apply light theme immediately
+applyTheme("light");
 
 function setupGlobalModals() {
-  // Theme Toggle Button
-  const themeBtn = document.getElementById("top-theme-toggle-btn");
-  if (themeBtn) {
-    themeBtn.addEventListener("click", toggleTheme);
-  }
-
   // Mobile Sidebar Drawer Toggle & Backdrop Overlay (Android & Touch Friendly)
   const mobileToggleBtn = document.getElementById("btn-mobile-sidebar-toggle");
   const sidebarEl = document.getElementById("app-sidebar");

@@ -92,35 +92,16 @@ export async function renderSettings(container) {
         <div id="workspaces-list" class="space-y-2"></div>
       </div>
 
-      <!-- Appearance & Theme Mode Card (Dark and Light Mode) -->
-      <div class="vss-card p-6 space-y-4" style="border: 1px solid var(--border-color); border-radius: 10px; padding: 20px;">
+      <!-- Display Posture Card -->
+      <div class="vss-card p-6 space-y-3" style="border: 1px solid var(--border-color); border-radius: 10px; padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h3 class="text-base font-bold text-[#14233D] brand-font" style="margin: 0;">Appearance & Theme Mode (डार्क और लाइट थीम)</h3>
-            <p class="text-xs text-slate-500" style="margin-top: 2px;">Switch visual presentation theme between Corporate Light and Executive Dark mode across the entire workspace.</p>
+            <h3 class="text-base font-bold text-[#14233D] brand-font" style="margin: 0;">Display & Theme Posture</h3>
+            <p class="text-xs text-slate-500" style="margin-top: 2px;">System visual presentation is standardized on Corporate Light mode for maximum day-to-day data readability.</p>
           </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 14px;">
-          <!-- Light Mode Option -->
-          <div id="settings-theme-light" class="theme-select-card" style="padding: 16px; border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: all 0.2s ease;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <span style="font-size: 22px;">☀️</span>
-              <span id="badge-theme-light" style="display: none; font-size: 10px; font-weight: 800; background: #DCFCE7; color: #15803D; padding: 2px 8px; border-radius: 12px;">ACTIVE</span>
-            </div>
-            <div style="font-weight: 800; font-size: 14px;">Corporate Light (लाइट)</div>
-            <div style="font-size: 11px; color: var(--slate); margin-top: 4px;">Crisp ivory palette optimized for daytime operation and high-clarity data viewing.</div>
-          </div>
-
-          <!-- Dark Mode Option -->
-          <div id="settings-theme-dark" class="theme-select-card" style="padding: 16px; border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: all 0.2s ease;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <span style="font-size: 22px;">🌙</span>
-              <span id="badge-theme-dark" style="display: none; font-size: 10px; font-weight: 800; background: #FEF3C7; color: #B45309; padding: 2px 8px; border-radius: 12px;">ACTIVE</span>
-            </div>
-            <div style="font-weight: 800; font-size: 14px;">Executive Dark (डार्क)</div>
-            <div style="font-size: 11px; color: var(--slate); margin-top: 4px;">High-contrast obsidian navy palette engineered for eye comfort and boardroom dashboards.</div>
-          </div>
+          <span style="font-size: 11px; font-weight: 800; background: #DCFCE7; color: #15803D; padding: 4px 10px; border-radius: 20px;">
+            Corporate Light Active
+          </span>
         </div>
       </div>
 
@@ -199,42 +180,6 @@ export async function renderSettings(container) {
       alert("Error creating business: " + e.message);
     }
   });
-
-  // Theme selection handlers
-  const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
-  const lightCard = document.getElementById("settings-theme-light");
-  const darkCard = document.getElementById("settings-theme-dark");
-  const lightBadge = document.getElementById("badge-theme-light");
-  const darkBadge = document.getElementById("badge-theme-dark");
-
-  function updateSettingsThemeUI(th) {
-    const isD = (th === "dark");
-    if (lightBadge) lightBadge.style.display = isD ? "none" : "inline-block";
-    if (darkBadge) darkBadge.style.display = isD ? "inline-block" : "none";
-    if (lightCard) {
-      lightCard.style.borderColor = isD ? "var(--border-color)" : "var(--saffron)";
-      lightCard.style.boxShadow = isD ? "none" : "0 4px 12px rgba(233, 154, 58, 0.15)";
-    }
-    if (darkCard) {
-      darkCard.style.borderColor = isD ? "var(--saffron)" : "var(--border-color)";
-      darkCard.style.boxShadow = isD ? "0 4px 12px rgba(233, 154, 58, 0.2)" : "none";
-    }
-  }
-
-  updateSettingsThemeUI(currentTheme);
-
-  if (lightCard) {
-    lightCard.onclick = () => {
-      if (window.applyTheme) window.applyTheme("light");
-      updateSettingsThemeUI("light");
-    };
-  }
-  if (darkCard) {
-    darkCard.onclick = () => {
-      if (window.applyTheme) window.applyTheme("dark");
-      updateSettingsThemeUI("dark");
-    };
-  }
 
   // Logout handler
   document.getElementById("btn-logout")?.addEventListener("click", async () => {
