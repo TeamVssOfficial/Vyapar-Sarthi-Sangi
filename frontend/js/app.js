@@ -1,26 +1,42 @@
 import { API } from "./api.js";
+import { renderLanding } from "./views/landing.js";
+import { renderAutoAnalyst } from "./views/auto_analyst.js";
 import { renderOverview } from "./views/overview.js";
 import { renderDatasets } from "./views/datasets.js";
 import { renderDataStudio } from "./views/data_studio.js";
 import { renderAnalyticsStudio } from "./views/analytics_studio.js";
 import { renderBIDashboard } from "./views/bi_dashboard.js";
+import { renderInventory } from "./views/inventory.js";
+import { renderFinance } from "./views/finance.js";
+import { renderAIAssistant } from "./views/ai_assistant.js";
+import { renderExcelStudio } from "./views/excel_studio.js";
 import { renderMLStudio } from "./views/ml_studio.js";
-import { renderAIAnalyst } from "./views/ai_analyst.js";
 import { renderReports } from "./views/reports.js";
 import { renderSettings } from "./views/settings.js";
+import { renderSubscription } from "./views/subscription.js";
+import { renderAdminSubscriptions } from "./views/admin_subscriptions.js";
 
 const routes = {
-  "": renderOverview,
-  "#": renderOverview,
+  "": renderAutoAnalyst,
+  "#": renderAutoAnalyst,
+  "#landing": renderLanding,
+  "#auto-analyst": renderAutoAnalyst,
   "#overview": renderOverview,
   "#datasets": renderDatasets,
-  "#data-studio": renderDataStudio,
+  "#data-studio": renderAutoAnalyst, // Automated by AI Data Science Agent
   "#analytics-studio": renderAnalyticsStudio,
   "#bi-dashboard": renderBIDashboard,
-  "#ml-studio": renderMLStudio,
-  "#ai-analyst": renderAIAnalyst,
+  "#business-intelligence": renderBIDashboard,
+  "#inventory": renderInventory,
+  "#finance": renderFinance,
+  "#ai-assistant": renderAIAssistant,
+  "#ai-analyst": renderAIAssistant,
+  "#excel-integration": renderExcelStudio,
+  "#ml-studio": renderAutoAnalyst, // Automated by AI Data Science Agent
   "#reports": renderReports,
-  "#settings": renderSettings
+  "#settings": renderSettings,
+  "#subscription": renderSubscription,
+  "#admin-subscriptions": renderAdminSubscriptions
 };
 
 export function openDirectUploadModal() {
@@ -55,11 +71,53 @@ export function closeDirectAuthModal() {
   if (modal) modal.style.display = "none";
 }
 
+function showTravelWarpAnimation(callback) {
+  let overlay = document.getElementById("warp-portal-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "warp-portal-overlay";
+    overlay.className = "warp-portal-overlay";
+    overlay.innerHTML = `
+      <div class="warp-portal-core">
+        <div class="warp-ring warp-ring-1"></div>
+        <div class="warp-ring warp-ring-2"></div>
+        <div class="warp-ring warp-ring-3"></div>
+        <div class="warp-badge-text">VV</div>
+      </div>
+      <div class="warp-travel-caption">Entering Vyapar Verse...</div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  overlay.classList.add("warp-active");
+  setTimeout(() => {
+    if (callback) callback();
+    setTimeout(() => {
+      overlay.classList.remove("warp-active");
+    }, 350);
+  }, 600);
+}
+
 export function navigateTo(route) {
   let target = route;
   if (!target || target === "#" || target === "") {
     target = "#overview";
   }
+
+  const current = (window.location.hash || "").trim().toLowerCase();
+  const isFromLanding = (current === "#landing" || current === "");
+  const isToOS = (target !== "#landing");
+
+  // "Osm se travel wala animation" when entering OS from landing
+  if (isFromLanding && isToOS) {
+    try { localStorage.setItem("vss_landing_seen", "true"); } catch (e) {}
+    showTravelWarpAnimation(() => {
+      window.location.hash = target;
+      handleRoute();
+    });
+    return;
+  }
+
   if (window.location.hash === target) {
     handleRoute();
   } else {
@@ -74,7 +132,102 @@ window.closeDirectUploadModal = closeDirectUploadModal;
 window.openDirectAuthModal = openDirectAuthModal;
 window.closeDirectAuthModal = closeDirectAuthModal;
 
+// ==========================================
+// App Theme Manager (Dark / Light Mode)
+// ==========================================
+export function getInitialTheme() {
+  const saved = localStorage.getItem("vss_theme");
+  if (saved === "dark" || saved === "light") return saved;
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    return "dark";
+  }
+  return "light";
+}
+
+export function applyTheme(theme) {
+  const isDark = (theme === "dark");
+  document.documentElement.setAttribute("data-theme", theme);
+  if (document.body) {
+    document.body.classList.toggle("dark-mode", isDark);
+  }
+  localStorage.setItem("vss_theme", theme);
+
+  const btn = document.getElementById("top-theme-toggle-btn");
+  if (btn) {
+    const icon = btn.querySelector("#theme-btn-icon");
+    const text = btn.querySelector("#theme-btn-text");
+    if (icon) icon.innerText = isDark ? "☀️" : "🌙";
+    if (text) text.innerText = isDark ? "Light" : "Dark";
+    btn.setAttribute("title", isDark ? "Switch to Corporate Light Mode" : "Switch to Executive Dark Mode");
+  }
+
+  // Sync with Reports PDF Theme dropdown if open
+  const pdfThemeSelect = document.getElementById("pdf-opt-theme");
+  if (pdfThemeSelect) {
+    pdfThemeSelect.value = theme;
+  }
+
+  // Dispatch custom event for views to re-theme their canvas/charts (like Plotly)
+  window.dispatchEvent(new CustomEvent("vss:theme_changed", { detail: { theme, isDark } }));
+}
+
+export function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const next = (current === "dark") ? "light" : "dark";
+  applyTheme(next);
+}
+
+window.applyTheme = applyTheme;
+window.toggleTheme = toggleTheme;
+window.getInitialTheme = getInitialTheme;
+
+// Apply theme immediately before rendering
+applyTheme(getInitialTheme());
+
 function setupGlobalModals() {
+  // Theme Toggle Button
+  const themeBtn = document.getElementById("top-theme-toggle-btn");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", toggleTheme);
+  }
+
+  // Mobile Sidebar Drawer Toggle & Backdrop Overlay (Android & Touch Friendly)
+  const mobileToggleBtn = document.getElementById("btn-mobile-sidebar-toggle");
+  const sidebarEl = document.getElementById("app-sidebar");
+  const backdropEl = document.getElementById("mobile-sidebar-backdrop");
+
+  function openMobileSidebar() {
+    if (sidebarEl) sidebarEl.classList.add("mobile-open");
+    if (backdropEl) backdropEl.classList.add("active");
+  }
+
+  function closeMobileSidebar() {
+    if (sidebarEl) sidebarEl.classList.remove("mobile-open");
+    if (backdropEl) backdropEl.classList.remove("active");
+  }
+
+  if (mobileToggleBtn) {
+    mobileToggleBtn.addEventListener("click", () => {
+      if (sidebarEl && sidebarEl.classList.contains("mobile-open")) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+    });
+  }
+
+  if (backdropEl) {
+    backdropEl.addEventListener("click", closeMobileSidebar);
+  }
+
+  if (sidebarEl) {
+    sidebarEl.addEventListener("click", (e) => {
+      if (e.target.closest("a.nav-link")) {
+        closeMobileSidebar();
+      }
+    });
+  }
+
   // 1. Top Upload Button & Modal
   const topUploadBtn = document.getElementById("top-direct-upload-btn");
   if (topUploadBtn) {
@@ -184,7 +337,7 @@ function setupGlobalModals() {
           if (fileLabel) fileLabel.innerText = "Click to Browse or Drag File Here";
           statusDiv.style.display = "none";
           if (submitBtn) submitBtn.disabled = false;
-          handleRoute();
+          navigateTo("#auto-analyst");
         }, 900);
       } catch (err) {
         statusDiv.style.background = "#FEE2E2";
@@ -216,43 +369,151 @@ function setupGlobalModals() {
     });
   }
 
-  // Modal Auth Tabs
+  // Modal Auth Tabs & Forms Navigation
+  const tabsBar = document.getElementById("auth-tabs-bar");
   const tabLogin = document.getElementById("auth-tab-btn-login");
   const tabRegister = document.getElementById("auth-tab-btn-register");
   const loginForm = document.getElementById("direct-login-form");
   const regForm = document.getElementById("direct-register-form");
+  const otpForm = document.getElementById("direct-otp-form");
+  const forgotForm = document.getElementById("direct-forgot-form");
+  const resetForm = document.getElementById("direct-reset-form");
   const authErr = document.getElementById("direct-auth-error");
 
-  tabLogin?.addEventListener("click", () => {
-    tabLogin.style.borderBottom = "2px solid var(--saffron)";
-    tabLogin.style.background = "#FFFFFF";
-    tabLogin.style.color = "var(--navy)";
-    tabRegister.style.borderBottom = "none";
-    tabRegister.style.background = "#F8FAFC";
-    tabRegister.style.color = "var(--slate)";
-    if (loginForm) loginForm.style.display = "flex";
-    if (regForm) regForm.style.display = "none";
-    if (authErr) authErr.style.display = "none";
-  });
+  let currentAuthEmail = "";
+  let currentAuthPurpose = "signup";
+  let otpTimerInterval = null;
+  let resendCooldownInterval = null;
 
-  tabRegister?.addEventListener("click", () => {
-    tabRegister.style.borderBottom = "2px solid var(--saffron)";
-    tabRegister.style.background = "#FFFFFF";
-    tabRegister.style.color = "var(--navy)";
-    tabLogin.style.borderBottom = "none";
-    tabLogin.style.background = "#F8FAFC";
-    tabLogin.style.color = "var(--slate)";
+  function showAuthMessage(msg, isError = true) {
+    if (!authErr) return;
+    authErr.style.display = "block";
+    if (isError) {
+      authErr.style.background = "#FEE2E2";
+      authErr.style.color = "#DC2626";
+      authErr.style.border = "1px solid #FECACA";
+    } else {
+      authErr.style.background = "#ECFDF5";
+      authErr.style.color = "#065F46";
+      authErr.style.border = "1px solid #A7F3D0";
+    }
+    authErr.innerText = msg;
+  }
+
+  function hideAllAuthForms() {
     if (loginForm) loginForm.style.display = "none";
-    if (regForm) regForm.style.display = "flex";
+    if (regForm) regForm.style.display = "none";
+    if (otpForm) otpForm.style.display = "none";
+    if (forgotForm) forgotForm.style.display = "none";
+    if (resetForm) resetForm.style.display = "none";
     if (authErr) authErr.style.display = "none";
+  }
+
+  function switchToLogin() {
+    hideAllAuthForms();
+    if (tabsBar) tabsBar.style.display = "flex";
+    if (loginForm) loginForm.style.display = "flex";
+    if (tabLogin) {
+      tabLogin.style.borderBottom = "2px solid var(--saffron)";
+      tabLogin.style.background = "#FFFFFF";
+      tabLogin.style.color = "var(--navy)";
+    }
+    if (tabRegister) {
+      tabRegister.style.borderBottom = "none";
+      tabRegister.style.background = "#F8FAFC";
+      tabRegister.style.color = "var(--slate)";
+    }
+  }
+
+  function switchToRegister() {
+    hideAllAuthForms();
+    if (tabsBar) tabsBar.style.display = "flex";
+    if (regForm) regForm.style.display = "flex";
+    if (tabRegister) {
+      tabRegister.style.borderBottom = "2px solid var(--saffron)";
+      tabRegister.style.background = "#FFFFFF";
+      tabRegister.style.color = "var(--navy)";
+    }
+    if (tabLogin) {
+      tabLogin.style.borderBottom = "none";
+      tabLogin.style.background = "#F8FAFC";
+      tabLogin.style.color = "var(--slate)";
+    }
+  }
+
+  function switchToOTP(email, purpose = "signup") {
+    currentAuthEmail = email;
+    currentAuthPurpose = purpose;
+    hideAllAuthForms();
+    if (tabsBar) tabsBar.style.display = "none";
+    if (otpForm) otpForm.style.display = "flex";
+
+    const emailLabel = document.getElementById("otp-target-email");
+    if (emailLabel) emailLabel.innerText = email;
+
+    const otpInput = document.getElementById("auth-otp-input");
+    if (otpInput) {
+      otpInput.value = "";
+      setTimeout(() => otpInput.focus(), 100);
+    }
+
+    startOTPTimer(300); // 5 minutes = 300s
+  }
+
+  function startOTPTimer(durationSeconds) {
+    if (otpTimerInterval) clearInterval(otpTimerInterval);
+    let remaining = durationSeconds;
+    const timerEl = document.getElementById("auth-otp-timer");
+
+    function updateDisplay() {
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      if (timerEl) {
+        timerEl.innerText = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      }
+      if (remaining <= 0) {
+        clearInterval(otpTimerInterval);
+        showAuthMessage("Verification code has expired. Please click 'Resend OTP'.", true);
+      }
+      remaining--;
+    }
+
+    updateDisplay();
+    otpTimerInterval = setInterval(updateDisplay, 1000);
+  }
+
+  tabLogin?.addEventListener("click", switchToLogin);
+  tabRegister?.addEventListener("click", switchToRegister);
+  document.getElementById("btn-close-auth-modal")?.addEventListener("click", closeDirectAuthModal);
+  document.getElementById("btn-modal-x-close")?.addEventListener("click", closeDirectAuthModal);
+
+  // Toggle Password Visibility
+  const togglePwdBtn = document.getElementById("btn-toggle-login-pwd");
+  const loginPwdInput = document.getElementById("auth-login-password");
+  togglePwdBtn?.addEventListener("click", () => {
+    if (loginPwdInput.type === "password") {
+      loginPwdInput.type = "text";
+      togglePwdBtn.innerText = "🔒";
+    } else {
+      loginPwdInput.type = "password";
+      togglePwdBtn.innerText = "👁";
+    }
   });
 
-  document.getElementById("btn-close-auth-modal")?.addEventListener("click", closeDirectAuthModal);
+  // Forgot Password Links
+  document.getElementById("auth-link-forgot")?.addEventListener("click", () => {
+    hideAllAuthForms();
+    if (tabsBar) tabsBar.style.display = "none";
+    if (forgotForm) forgotForm.style.display = "flex";
+  });
+  document.getElementById("btn-forgot-back")?.addEventListener("click", switchToLogin);
+  document.getElementById("btn-otp-back")?.addEventListener("click", switchToLogin);
+  document.getElementById("btn-reset-back")?.addEventListener("click", switchToLogin);
 
-  // Direct Login Form Submit
+  // 1. Direct Login Form Submit
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("auth-login-email")?.value;
+    const email = document.getElementById("auth-login-email")?.value?.trim();
     const password = document.getElementById("auth-login-password")?.value;
     const submitBtn = document.getElementById("btn-submit-direct-login");
 
@@ -261,34 +522,79 @@ function setupGlobalModals() {
 
     try {
       const data = await API.login({ email, password });
+      if (data.status === "otp_required") {
+        switchToOTP(data.email, "signup");
+        showAuthMessage(data.message || "Please enter the 6-digit verification code sent to your email.", false);
+        return;
+      }
       API.setToken(data.token);
       if (data.businesses && data.businesses.length > 0) {
         API.setActiveBusinessId(data.businesses[0].id);
       }
+
+      // Check if user attached an Excel file during registration
+      const regExcelInput = document.getElementById("auth-reg-excel");
+      if (regExcelInput && regExcelInput.files && regExcelInput.files[0]) {
+        try {
+          const fd = new FormData();
+          fd.append("file", regExcelInput.files[0]);
+          fd.append("name", regExcelInput.files[0].name);
+          const upRes = await API.uploadDataset(fd);
+          if (upRes && upRes.dataset && upRes.dataset.id) {
+            API.setActiveDatasetId(upRes.dataset.id);
+          }
+        } catch (upErr) {
+          console.warn("Excel upload on register:", upErr);
+        }
+      }
+
+      // Check if user attached an Excel file
+      const loginExcelInput = document.getElementById("auth-login-excel");
+      if (loginExcelInput && loginExcelInput.files && loginExcelInput.files[0]) {
+        try {
+          const fd = new FormData();
+          fd.append("file", loginExcelInput.files[0]);
+          fd.append("name", loginExcelInput.files[0].name);
+          const upRes = await API.uploadDataset(fd);
+          if (upRes && upRes.dataset && upRes.dataset.id) {
+            API.setActiveDatasetId(upRes.dataset.id);
+          }
+        } catch (upErr) {
+          console.warn("Excel upload on login:", upErr);
+        }
+      }
+
       closeDirectAuthModal();
       loginForm.reset();
       updateUserUI(data.user, data.businesses);
       handleRoute();
     } catch (err) {
-      if (authErr) {
-        authErr.style.display = "block";
-        authErr.style.background = "#FEE2E2";
-        authErr.style.color = "#DC2626";
-        authErr.innerText = err.message || "Invalid email or password.";
-      }
+      showAuthMessage(err.message || "Invalid email or password.", true);
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
   });
 
-  // Direct Register Form Submit
+  // 2. Direct Register Form Submit
   regForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = document.getElementById("auth-reg-name")?.value;
-    const email = document.getElementById("auth-reg-email")?.value;
+    const name = document.getElementById("auth-reg-name")?.value?.trim();
+    const email = document.getElementById("auth-reg-email")?.value?.trim();
     const password = document.getElementById("auth-reg-password")?.value;
-    const biz = document.getElementById("auth-reg-biz")?.value;
+    const confirm = document.getElementById("auth-reg-confirm")?.value;
+    const biz = document.getElementById("auth-reg-biz")?.value?.trim();
+    const terms = document.getElementById("auth-reg-terms")?.checked;
     const submitBtn = document.getElementById("btn-submit-direct-reg");
+
+    if (!terms) {
+      showAuthMessage("Please accept the terms of service to continue.", true);
+      return;
+    }
+
+    if (password !== confirm) {
+      showAuthMessage("Passwords do not match. Please verify.", true);
+      return;
+    }
 
     if (authErr) authErr.style.display = "none";
     if (submitBtn) submitBtn.disabled = true;
@@ -298,23 +604,171 @@ function setupGlobalModals() {
         name,
         email,
         password,
+        confirm_password: confirm,
         business_name: biz || `${name}'s Enterprise`
       });
-      API.setToken(data.token);
-      if (data.business) {
-        API.setActiveBusinessId(data.business.id);
+
+      if (data.status === "otp_required") {
+        switchToOTP(data.email, "signup");
+        showAuthMessage(data.message || `Verification code sent to ${data.email}.`, false);
+      } else {
+        API.setToken(data.token);
+        if (data.business) API.setActiveBusinessId(data.business.id);
+        closeDirectAuthModal();
+        regForm.reset();
+        updateUserUI(data.user, data.business ? [data.business] : []);
+        handleRoute();
       }
-      closeDirectAuthModal();
-      regForm.reset();
-      updateUserUI(data.user, data.business ? [data.business] : []);
-      handleRoute();
     } catch (err) {
-      if (authErr) {
-        authErr.style.display = "block";
-        authErr.style.background = "#FEE2E2";
-        authErr.style.color = "#DC2626";
-        authErr.innerText = err.message || "Registration failed.";
+      showAuthMessage(err.message || "Registration failed. Please try again.", true);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  // 3. Email OTP Form Submit
+  otpForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const otp = document.getElementById("auth-otp-input")?.value?.trim();
+    const submitBtn = document.getElementById("btn-submit-direct-otp");
+
+    if (!otp || otp.length !== 6) {
+      showAuthMessage("Please enter the complete 6-digit OTP code.", true);
+      return;
+    }
+
+    if (authErr) authErr.style.display = "none";
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const data = await API.verifyOTP({
+        email: currentAuthEmail,
+        otp: otp,
+        purpose: currentAuthPurpose
+      });
+
+      if (otpTimerInterval) clearInterval(otpTimerInterval);
+      showAuthMessage(data.message || "Account verified successfully!", false);
+
+      API.setToken(data.token);
+      if (data.businesses && data.businesses.length > 0) {
+        API.setActiveBusinessId(data.businesses[0].id);
       }
+
+      // Check if user attached an Excel file during registration
+      const regExcelInput = document.getElementById("auth-reg-excel");
+      if (regExcelInput && regExcelInput.files && regExcelInput.files[0]) {
+        try {
+          const fd = new FormData();
+          fd.append("file", regExcelInput.files[0]);
+          fd.append("name", regExcelInput.files[0].name);
+          const upRes = await API.uploadDataset(fd);
+          if (upRes && upRes.dataset && upRes.dataset.id) {
+            API.setActiveDatasetId(upRes.dataset.id);
+          }
+        } catch (upErr) {
+          console.warn("Excel upload on register:", upErr);
+        }
+      }
+
+      setTimeout(() => {
+        closeDirectAuthModal();
+        otpForm.reset();
+        updateUserUI(data.user, data.businesses);
+        handleRoute();
+      }, 700);
+    } catch (err) {
+      showAuthMessage(err.message || "Invalid OTP code. Please check your email and try again.", true);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  // 4. Resend OTP Button with 60s Cooldown
+  document.getElementById("btn-resend-otp")?.addEventListener("click", async () => {
+    const resendBtn = document.getElementById("btn-resend-otp");
+    if (!currentAuthEmail) return;
+
+    if (resendBtn) resendBtn.disabled = true;
+    try {
+      const data = await API.resendOTP({ email: currentAuthEmail, purpose: currentAuthPurpose });
+      showAuthMessage(data.message || "New OTP dispatched to your inbox.", false);
+      startOTPTimer(300);
+
+      // 60-second client-side cooldown
+      let cooldown = 60;
+      if (resendCooldownInterval) clearInterval(resendCooldownInterval);
+      resendCooldownInterval = setInterval(() => {
+        if (cooldown > 0) {
+          if (resendBtn) resendBtn.innerText = `Resend (${cooldown}s)`;
+          cooldown--;
+        } else {
+          clearInterval(resendCooldownInterval);
+          if (resendBtn) {
+            resendBtn.innerText = "Resend OTP";
+            resendBtn.disabled = false;
+          }
+        }
+      }, 1000);
+    } catch (err) {
+      showAuthMessage(err.message || "Could not resend OTP at this time.", true);
+      if (resendBtn) resendBtn.disabled = false;
+    }
+  });
+
+  // 5. Forgot Password Form Submit
+  forgotForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-forgot-email")?.value?.trim();
+    const submitBtn = document.getElementById("btn-submit-direct-forgot");
+
+    if (authErr) authErr.style.display = "none";
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      currentAuthEmail = email;
+      const data = await API.forgotPassword({ email });
+      hideAllAuthForms();
+      if (resetForm) resetForm.style.display = "flex";
+      showAuthMessage(data.message || `Password reset code sent to ${email}.`, false);
+    } catch (err) {
+      showAuthMessage(err.message || "Could not send reset code.", true);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  // 6. Reset Password Form Submit
+  resetForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const otp = document.getElementById("auth-reset-otp")?.value?.trim();
+    const newPwd = document.getElementById("auth-reset-password")?.value;
+    const confirmPwd = document.getElementById("auth-reset-confirm")?.value;
+    const submitBtn = document.getElementById("btn-submit-direct-reset");
+
+    if (newPwd !== confirmPwd) {
+      showAuthMessage("Passwords do not match.", true);
+      return;
+    }
+
+    if (authErr) authErr.style.display = "none";
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const data = await API.resetPassword({
+        email: currentAuthEmail,
+        otp: otp,
+        new_password: newPwd,
+        confirm_password: confirmPwd
+      });
+
+      showAuthMessage(data.message || "Password updated successfully! Please sign in.", false);
+      setTimeout(() => {
+        resetForm.reset();
+        switchToLogin();
+      }, 1200);
+    } catch (err) {
+      showAuthMessage(err.message || "Password reset failed. Invalid or expired OTP.", true);
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -322,14 +776,19 @@ function setupGlobalModals() {
 }
 
 export async function initApp() {
-  // Always force boot directly into Business OS Launchpad Desktop on app startup/refresh
-  try {
-    history.replaceState(null, "", window.location.pathname + "#overview");
-  } catch (e) {}
-  window.location.hash = "#overview";
-  document.body.classList.add("is-os-desktop");
+  const currentHash = (window.location.hash || "").trim().toLowerCase();
+  const hasVisited = localStorage.getItem("vss_has_visited");
+
+  // "Roz landing page nahi dikhega":
+  // If returning user or logged in, navigate straight to the OS workspace (#overview)
+  if (!currentHash || currentHash === "#") {
+    const targetHash = (API.getToken() || hasVisited) ? "#overview" : "#landing";
+    window.location.hash = targetHash;
+  }
+  localStorage.setItem("vss_has_visited", "true");
 
   setupGlobalModals();
+  applyTheme(getInitialTheme());
 
   // Intercept all hash clicks to guarantee navigation even if hash is identical
   document.addEventListener("click", (e) => {
@@ -352,6 +811,51 @@ export async function initApp() {
     updateUserUI(null, []);
     openDirectAuthModal("Your session has expired or requires authentication.");
     setTimeout(() => { isHandlingUnauthorized = false; }, 1500);
+  });
+
+  
+  let isHandlingSubExpired = false;
+  window.addEventListener("vss:subscription_expired", (e) => {
+    if (isHandlingSubExpired) return;
+    isHandlingSubExpired = true;
+    const detail = (e && e.detail) || {};
+    let subModal = document.getElementById("vss-sub-expired-modal");
+    if (!subModal) {
+      subModal = document.createElement("div");
+      subModal.id = "vss-sub-expired-modal";
+      subModal.className = "modal-overlay";
+      subModal.innerHTML = `
+        <div class="modal-content" style="max-width: 480px; padding: 24px; text-align: center;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 26px;">
+            ⏳
+          </div>
+          <h3 style="font-size: 18px; font-weight: 800; color: #14233D; margin: 0 0 8px;">Free Trial Period Expired</h3>
+          <p id="vss-sub-expired-msg" style="font-size: 13px; color: #64748B; margin: 0 0 20px; line-height: 1.5;">
+            Your free evaluation period has concluded. All your business records, custom workbooks, and datasets are securely preserved. Upgrade to Vyapar Business to continue unlimited AI analytics.
+          </p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="btn-close-sub-expired" class="btn btn-outline" style="font-size: 12px; padding: 8px 16px;">Maybe Later</button>
+            <button id="btn-goto-sub-plans" class="btn btn-saffron" style="font-size: 12px; padding: 8px 18px; font-weight: 800;">
+              View Subscription Plans &rarr;
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(subModal);
+      document.getElementById("btn-close-sub-expired")?.addEventListener("click", () => {
+        subModal.style.display = "none";
+      });
+      document.getElementById("btn-goto-sub-plans")?.addEventListener("click", () => {
+        subModal.style.display = "none";
+        window.navigateTo("#subscription");
+      });
+    }
+    const msgEl = document.getElementById("vss-sub-expired-msg");
+    if (msgEl && detail.message) {
+      msgEl.innerText = detail.message;
+    }
+    subModal.style.display = "flex";
+    setTimeout(() => { isHandlingSubExpired = false; }, 1500);
   });
 
   window.addEventListener("vss:business-changed", async () => {
@@ -392,7 +896,45 @@ export async function initApp() {
   }
 }
 
+
+async function updateSubscriptionPill(user) {
+  const pillText = document.getElementById("top-subscription-status-text");
+  const navAdminSub = document.getElementById("nav-admin-subscriptions");
+  if (!user) {
+    if (pillText) pillText.innerText = "Free Trial Available";
+    if (navAdminSub) navAdminSub.style.display = "none";
+    return;
+  }
+  if (navAdminSub) {
+    navAdminSub.style.display = (user.role === "admin") ? "flex" : "none";
+  }
+  try {
+    const sub = await API.getCurrentSubscription();
+    if (!pillText) return;
+    if (sub.status === "TRIAL_ACTIVE") {
+      pillText.innerText = `Trial Active (${sub.days_remaining}d)`;
+    } else if (sub.status === "TRIAL_EXPIRED") {
+      pillText.innerText = "Trial Expired — Upgrade";
+      if (pillText.parentElement) {
+        pillText.parentElement.style.background = "#FEE2E2";
+        pillText.parentElement.style.color = "#DC2626";
+      }
+    } else if (sub.status === "ACTIVE") {
+      pillText.innerText = `Vyapar Business (${sub.days_remaining}d)`;
+      if (pillText.parentElement) {
+        pillText.parentElement.style.background = "#FEF3C7";
+        pillText.parentElement.style.color = "#B45309";
+      }
+    } else {
+      pillText.innerText = "Start Free Trial";
+    }
+  } catch (e) {
+    if (pillText) pillText.innerText = "Start Free Trial";
+  }
+}
+
 function updateUserUI(user, businesses) {
+  updateSubscriptionPill(user);
   const authBtnText = document.getElementById("top-auth-btn-text");
   if (user) {
     if (authBtnText) authBtnText.innerText = `${user.name} (Sign Out)`;
@@ -458,20 +1000,33 @@ let activeRouteId = 0;
 export async function handleRoute() {
   const thisRouteId = ++activeRouteId;
   const rawHash = (window.location.hash || "").trim().toLowerCase();
-  const isOS = (!rawHash || rawHash === "#" || rawHash === "#overview" || rawHash === "#os");
-  const hash = isOS ? "#overview" : (window.location.hash || "#overview");
-
-  if (isOS) {
-    document.body.classList.add("is-os-desktop");
-  } else {
-    document.body.classList.remove("is-os-desktop");
+  
+  let hash = rawHash;
+  if (!hash || hash === "#") {
+    let hasSeenLanding = false;
+    try { hasSeenLanding = !!localStorage.getItem("vss_landing_seen"); } catch (e) {}
+    hash = (API.getToken() || hasSeenLanding) ? "#overview" : "#landing";
   }
 
-  // 1. Strict Authentication Guard: No guest access to any studio or feature!
+  const isLanding = (hash === "#landing");
+  if (isLanding) {
+    document.body.classList.add("is-landing");
+    document.body.classList.remove("is-os-desktop");
+  } else {
+    document.body.classList.remove("is-landing");
+    if (hash === "#overview") {
+      document.body.classList.add("is-os-desktop");
+    } else {
+      document.body.classList.remove("is-os-desktop");
+    }
+  }
+
+  // Authentication check for protected areas (Landing, Auto-Analyst, Overview are open for seamless onboarding)
   const token = API.getToken();
-  if (!isOS && !token) {
-    window.location.hash = "#overview";
-    openDirectAuthModal("🔒 Authentication Required: Guest access is disabled. Please sign in or register to access VSS AI Enterprise Studios.");
+  const publicRoutes = ["#landing", "#overview", "#auto-analyst"];
+  if (!token && !publicRoutes.includes(hash)) {
+    window.location.hash = "#auto-analyst";
+    openDirectAuthModal("🔒 Authentication Required: Please sign in or register to access enterprise features.");
     return;
   }
 
@@ -479,7 +1034,7 @@ export async function handleRoute() {
   if (!mainContent) return;
 
   // 2. Mandatory Business CSV / Excel Dataset Requirement for Intelligence Studios
-  const studiosNeedingCSV = ["#data-studio", "#analytics-studio", "#bi-dashboard", "#ml-studio", "#ai-analyst"];
+  const studiosNeedingCSV = ["#auto-analyst", "#analytics-studio", "#bi-dashboard", "#ai-assistant", "#ai-analyst"];
   if (studiosNeedingCSV.includes(hash)) {
     let activeDsId = API.getActiveDatasetId();
     try {
@@ -540,6 +1095,16 @@ export async function handleRoute() {
     }
   });
 
+  // Update Android Bottom Navigation Bar active state
+  document.querySelectorAll(".android-tab-item").forEach(item => {
+    const target = item.getAttribute("data-route");
+    if (target === hash || (target === "#bi-cockpit" && ["#bi-cockpit", "#reports", "#analytics-studio", "#auto-analyst"].includes(hash))) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+  });
+
   mainContent.innerHTML = `
     <div style="text-align: center; padding: 60px 20px; color: var(--slate);">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--saffron)" stroke-width="2" style="animation: spin 1s linear infinite; margin: 0 auto 10px;">
@@ -565,5 +1130,9 @@ export async function handleRoute() {
   }
 }
 
-// Start app on DOMContentLoaded
-window.addEventListener("DOMContentLoaded", initApp);
+// Start app immediately or on DOMContentLoaded
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}

@@ -1,3 +1,4 @@
+from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -6,8 +7,9 @@ import uuid
 from sqlalchemy.orm import Session
 
 from database.connection import get_db
-from database.models import User, Business, Dataset, Report, AuditLog
+from database.models import User, Business, UserBusiness, Dataset, Report, AuditLog
 from auth.dependencies import get_current_user, get_current_business
+from auth.subscription_guard import require_active_subscription
 from config import settings
 from api.datasets import load_dataset_df
 from engines.data_intelligence.profiling import profile_dataset
@@ -23,7 +25,10 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 class GenerateReportRequest(BaseModel):
     report_type: str = Field(..., description="'pdf' or 'excel'")
-    title: str | None = None
+    title: Optional[str] = None
+    theme: Optional[str] = "light"  # 'light' or 'dark'
+    language: Optional[str] = "bilingual"  # 'bilingual', 'en', 'hi'
+    include_charts: Optional[bool] = True
 
 
 @router.post("/{dataset_id}/generate")
@@ -32,7 +37,8 @@ def generate_report_endpoint(
     req: GenerateReportRequest,
     user: User = Depends(get_current_user),
     business: Business = Depends(get_current_business),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _sub: Any = Depends(require_active_subscription)
 ):
     dataset = db.query(Dataset).filter(
         Dataset.id == dataset_id,
@@ -57,7 +63,11 @@ def generate_report_endpoint(
             business_name=business.name,
             overview_data=profile,
             kpis_data=kpis,
-            quality_data=profile
+            quality_data=profile,
+            theme=req.theme or "light",
+            language=req.language or "bilingual",
+            include_charts=req.include_charts if req.include_charts is not None else True,
+            df=df
         )
     elif rtype == "excel":
         file_path = REPORTS_DIR / f"{report_id}.xlsx"
@@ -122,15 +132,22 @@ def list_reports(
 @router.get("/{report_id}/download")
 def download_report_file(
     report_id: str,
+    user: User = Depends(get_current_user),
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db)
 ):
-    report = db.query(Report).filter(
-        Report.id == report_id,
-        Report.business_id == business.id
-    ).first()
+    report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
+
+    # Authorize access: active business, or user belongs to report's business, or admin
+    if report.business_id != business.id and user.role != "admin":
+        membership = db.query(UserBusiness).filter(
+            UserBusiness.user_id == user.id,
+            UserBusiness.business_id == report.business_id
+        ).first()
+        if not membership and getattr(business, "owner_id", None) != user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to download this report")
 
     path = Path(report.file_path)
     if not path.is_file():
@@ -139,4 +156,9 @@ def download_report_file(
     media_type = "application/pdf" if report.report_type == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     filename = f"{report.title}.{path.suffix.lstrip('.')}"
 
-    return FileResponse(path=path, media_type=media_type, filename=filename)
+    return FileResponse(
+        path=path,
+        media_type=media_type,
+        filename=filename,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )

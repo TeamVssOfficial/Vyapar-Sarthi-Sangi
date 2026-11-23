@@ -1,24 +1,48 @@
+// Vyapar Verse — Intelligent Data Visualization Studio
+// Shopkeeper-friendly, category-based intelligent graph generator covering 7 core business categories.
 import { API } from "../api.js";
 import { ensurePlotly } from "../utils/plotly_loader.js";
-import { renderSVGBarChart, renderSVGLineChart, renderSVGPieChart, autoRenderSpec } from "../utils/svg_charts.js";
 
 export async function renderAnalyticsStudio(container) {
-  const activeDatasetId = API.getActiveDatasetId();
+  let activeDatasetId = API.getActiveDatasetId();
+  let datasetsList = [];
+  let currentDataset = null;
+  let detectedMapping = {};
+  let currentCategory = "sales";
+  let activeGraphDef = null;
+  let activeChartType = "bar"; // "bar", "line", "pie", "area", "scatter", "table"
+  let topNLimit = 10; // 5, 10, 20, "all"
+  let sortOrder = "desc"; // "desc", "asc"
+  let rawRowsData = [];
+
+  // 1. Check or load datasets
+  try {
+    const dRes = await API.listDatasets();
+    datasetsList = dRes.datasets || [];
+    if (!activeDatasetId && datasetsList.length > 0) {
+      activeDatasetId = datasetsList[0].id;
+      API.setActiveDatasetId(activeDatasetId);
+    }
+  } catch (e) {
+    console.error("Failed to list datasets:", e);
+  }
 
   if (!activeDatasetId) {
     container.innerHTML = `
-      <div class="vss-card p-12 text-center max-w-lg mx-auto mt-8" style="padding: 40px 30px; text-align: center; max-width: 540px; margin: 40px auto;">
-        <div style="width: 56px; height: 56px; border-radius: 14px; background: rgba(233,154,58,0.15); color: #E99A3A; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E99A3A" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><circle cx="12" cy="4" r="2" fill="#E99A3A"></circle></svg>
+      <div class="vss-card" style="padding: 40px; text-align: center; max-width: 580px; margin: 40px auto; border-radius: 14px;">
+        <div style="width: 54px; height: 54px; border-radius: 14px; background: rgba(233,154,58,0.15); color: #E99A3A; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">
+          📊
         </div>
-        <h3 style="font-size: 18px; font-weight: 800; color: #14233D; margin-bottom: 8px;">No Active Dataset Selected</h3>
-        <p style="font-size: 13px; color: #64748B; margin-bottom: 24px; line-height: 1.6;">Select a dataset from the Datasets Hub to unlock the full Analytics Studio suite: Automated EDA, Custom Chart Builder, Correlations, and Anomaly Diagnostics.</p>
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--navy); margin-bottom: 8px;">No Business Dataset Selected</h3>
+        <p style="font-size: 13px; color: var(--slate); margin-bottom: 24px; line-height: 1.6;">
+          Select or upload your sales spreadsheet, store register, or cash ledger to unlock intelligent automated business visualizations.
+        </p>
         <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-          <button onclick="window.navigateTo('#overview')" class="btn" style="background: rgba(20, 35, 61, 0.08); color: #14233D; border: 1px solid #CBD5E1; font-weight: 700; padding: 10px 20px; font-size: 13px;">
-            &larr; Back to Business OS
+          <button onclick="window.openDirectUploadModal()" class="btn btn-saffron" style="font-weight: 700;">
+            Upload Excel / CSV
           </button>
-          <button onclick="window.navigateTo('#datasets')" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px; font-weight: 700;">
-            Go to Datasets Hub &rarr;
+          <button onclick="window.navigateTo('#excel-integration')" class="btn btn-outline" style="font-weight: 700;">
+            Open Excel Studio
           </button>
         </div>
       </div>
@@ -26,873 +50,895 @@ export async function renderAnalyticsStudio(container) {
     return;
   }
 
+  // Render Studio Shell
   container.innerHTML = `
-    <div class="space-y-6" style="display: flex; flex-direction: column; gap: 20px;">
+    <div style="max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
       
-      <!-- STUDIO HEADER & TOP ACTION BAR -->
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 16px;">
+      <!-- STUDIO TOP HEADER BAR -->
+      <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
         <div style="display: flex; align-items: center; gap: 14px;">
-          <!-- Distinct Analytics Studio Logo Badge -->
-          <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, rgba(233,154,58,0.2) 0%, rgba(217,119,6,0.25) 100%); border: 1px solid rgba(233,154,58,0.4); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(233,154,58,0.15);">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E99A3A" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><circle cx="12" cy="4" r="2" fill="#E99A3A"></circle></svg>
+          <div style="width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, rgba(233,154,58,0.2) 0%, rgba(217,119,6,0.25) 100%); border: 1px solid rgba(233,154,58,0.4); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+            📈
           </div>
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <h1 style="font-size: 22px; font-weight: 800; color: #14233D; margin: 0;">Analytics Studio</h1>
-              <span class="os-badge-live" style="background: rgba(233,154,58,0.15); color: #B45309; border: 1px solid rgba(233,154,58,0.3); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Automated EDA & Visual Suite</span>
+              <h1 style="font-size: 20px; font-weight: 800; color: var(--navy); margin: 0;">Data Visualization Studio</h1>
+              <span style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">7 Shopkeeper Categories</span>
             </div>
-            <p style="font-size: 12px; color: #64748B; margin-top: 2px;">
-              Comprehensive data profiling, interactive Plotly visualization studio, Pearson correlations, and IQR anomaly fences.
+            <p style="font-size: 12px; color: var(--slate); margin-top: 2px;">
+              Auto-mapped charts, interactive Plotly canvas, and instant business visual intelligence.
             </p>
           </div>
         </div>
 
-        <!-- Top Right Actions -->
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <button id="btn-switch-dataset-eda" class="btn btn-outline" style="font-size: 12px; padding: 7px 14px; font-weight: 700;">
-            Change Dataset
-          </button>
-          <button id="btn-export-eda-json" class="btn btn-saffron" style="font-size: 12px; padding: 7px 16px; font-weight: 700;">
-            Export EDA Summary
+          <!-- Dataset Selector -->
+          <div style="display: flex; align-items: center; gap: 6px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 4px 10px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748B;">Dataset:</span>
+            <select id="vis-dataset-select" style="background: transparent; border: none; font-size: 12px; font-weight: 700; color: var(--navy); outline: none; cursor: pointer;">
+              ${datasetsList.map(d => `<option value="${d.id}" ${d.id === activeDatasetId ? 'selected' : ''}>${d.filename || d.name || d.id}</option>`).join("")}
+            </select>
+          </div>
+
+          <button id="btn-vis-open-excel" class="btn" style="background: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 12px; font-weight: 700; padding: 8px 14px;">
+            📊 Open in Excel Studio
           </button>
         </div>
       </div>
 
-      <!-- LOADING INDICATOR -->
-      <div id="eda-loading" style="text-align: center; padding: 60px 20px; color: var(--slate);">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--saffron)" stroke-width="2.5" style="animation: spin 1s linear infinite; margin: 0 auto 12px; display: block;">
-          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-        </svg>
-        <div style="font-size: 15px; font-weight: 700; color: var(--navy);">Loading Business Analytics...</div>
-        <div style="font-size: 12px; color: var(--slate); margin-top: 4px;">Calculating sales numbers, column summaries, and visual charts</div>
+      <!-- NATURAL LANGUAGE GRAPH QUERY BAR -->
+      <div style="background: linear-gradient(135deg, #0C1729 0%, #14233D 100%); border-radius: 12px; padding: 18px 24px; color: #FFFFFF; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 4px 16px rgba(12, 23, 41, 0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: #E99A3A; font-size: 16px;">✨</span>
+            <span style="font-size: 13px; font-weight: 800; color: #FFFFFF;">Ask AI to create a graph...</span>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="ai-prompt-pill" data-q="Show top 5 products by revenue" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; padding: 3px 10px; font-size: 11px; color: #CBD5E1; cursor: pointer;">"Top 5 products by revenue"</button>
+            <button class="ai-prompt-pill" data-q="Sales trend over time" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; padding: 3px 10px; font-size: 11px; color: #CBD5E1; cursor: pointer;">"Sales trend over time"</button>
+            <button class="ai-prompt-pill" data-q="Category-wise sales distribution" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; padding: 3px 10px; font-size: 11px; color: #CBD5E1; cursor: pointer;">"Sales by category"</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="vis-ai-input" placeholder="Type plain English or Hindi request (e.g. 'Show sales by month' or 'Best selling items leaderboard')" style="flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); color: #FFFFFF; font-size: 13px; outline: none;" />
+          <button id="btn-vis-ai-submit" class="btn btn-saffron" style="font-weight: 800; font-size: 13px; padding: 10px 20px;">Generate Graph</button>
+        </div>
       </div>
 
-      <!-- MAIN STUDIO CONTENT CONTAINER (Hidden until loaded) -->
-      <div id="eda-content" style="display: none; flex-direction: column; gap: 20px;">
+      <!-- RECOMMENDED FOR MY DATASET SECTION -->
+      <div id="vis-recommended-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-size: 14px; font-weight: 800; color: var(--navy); display: flex; align-items: center; gap: 6px;">
+            <span>💡</span> Recommended for My Dataset
+          </div>
+          <span style="font-size: 11px; color: var(--slate);">Detected columns match these graphs with 100% precision</span>
+        </div>
+        <div id="vis-recommended-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- MAIN STUDIO: CATEGORIES & GRAPH PICKER + PLOTLY CANVAS -->
+      <div style="display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start;">
         
-        <!-- TOP EXECUTIVE TELEMETRY HUD CARDS -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;" id="eda-hud-grid">
-          <div class="vss-card" style="padding: 14px; border-left: 4px solid var(--saffron);">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Total Rows</div>
-            <div style="font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px;" id="hud-eda-rows">--</div>
-            <div style="font-size: 11px; color: #10B981; font-weight: 600;">Rows Analyzed</div>
-          </div>
-          <div class="vss-card" style="padding: 14px; border-left: 4px solid #3B82F6;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Total Columns</div>
-            <div style="font-size: 22px; font-weight: 800; color: #1E40AF; margin-top: 4px;" id="hud-eda-cols">--</div>
-            <div style="font-size: 11px; color: #64748B;" id="hud-eda-types-split">-- Num / -- Cat</div>
-          </div>
-          <div class="vss-card" style="padding: 14px; border-left: 4px solid #10B981;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Numeric Metrics</div>
-            <div style="font-size: 22px; font-weight: 800; color: #047857; margin-top: 4px;" id="hud-eda-num">--</div>
-            <div style="font-size: 11px; color: #10B981;">Values & Amounts</div>
-          </div>
-          <div class="vss-card" style="padding: 14px; border-left: 4px solid #8B5CF6;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Categories</div>
-            <div style="font-size: 22px; font-weight: 800; color: #6D28D9; margin-top: 4px;" id="hud-eda-cat">--</div>
-            <div style="font-size: 11px; color: #8B5CF6;">Text & Labels</div>
-          </div>
-          <div class="vss-card" style="padding: 14px; border-left: 4px solid #EF4444; position: relative;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Outlier Points</div>
-              <button id="btn-hud-jump-outliers" style="background: rgba(239, 68, 68, 0.1); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 4px; font-size: 10px; font-weight: 800; padding: 2px 7px; cursor: pointer;" title="Open Outlier Remover">⚡ Fix Outliers</button>
+        <!-- LEFT: CATEGORIES & GRAPH PICKER -->
+        <div class="vss-card" style="padding: 18px; display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--slate); margin-bottom: 8px;">1. Business Category</label>
+            <div style="display: flex; flex-direction: column; gap: 4px;" id="vis-category-tabs">
+              <button class="vis-category-pill active" data-cat="sales">💰 Sales Analysis</button>
+              <button class="vis-category-pill" data-cat="product">📦 Product Analysis</button>
+              <button class="vis-category-pill" data-cat="inventory">📊 Inventory Analysis</button>
+              <button class="vis-category-pill" data-cat="finance">💳 Finance & Margins</button>
+              <button class="vis-category-pill" data-cat="customer">👥 Customer Analysis</button>
+              <button class="vis-category-pill" data-cat="purchase">🚚 Purchase & Supplier</button>
+              <button class="vis-category-pill" data-cat="regional">📍 Regional & Store</button>
             </div>
-            <div style="font-size: 22px; font-weight: 800; color: #DC2626; margin-top: 4px;" id="hud-eda-outliers">--</div>
-            <div style="font-size: 11px; color: #B91C1C;" id="hud-eda-outlier-cols">-- cols affected</div>
-          </div>
-        </div>
-
-        <!-- WORKSPACE SUB-NAVIGATION TABS (ALL FEATURES) -->
-        <div class="studio-tab-bar" id="eda-tab-bar">
-          <button class="studio-tab-btn active" data-tab="tab-findings">
-            <span>📊</span> Executive Summary
-          </button>
-          <button class="studio-tab-btn" data-tab="tab-chart-studio">
-            <span>📈</span> Visual Chart Studio
-          </button>
-          <button class="studio-tab-btn" data-tab="tab-statistics">
-            <span>🔢</span> Metric Statistics
-          </button>
-          <button class="studio-tab-btn" data-tab="tab-correlations">
-            <span>🔀</span> Metric Correlations
-          </button>
-          <button class="studio-tab-btn" data-tab="tab-outliers">
-            <span>⚠️</span> Anomaly & Outliers
-          </button>
-          <button class="studio-tab-btn" data-tab="tab-categories">
-            <span>🏷️</span> Category Breakdown
-          </button>
-          <button class="studio-tab-btn" data-tab="tab-trends">
-            <span>📅</span> Trends Over Time
-          </button>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- TAB 1: EXECUTIVE SUMMARY & KEY FINDINGS     -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-findings" style="display: flex; flex-direction: column; gap: 16px;">
-          <div class="vss-card" style="padding: 20px; background: linear-gradient(135deg, #FFFFFF 0%, #FFFBEB 100%); border-left: 5px solid var(--saffron);">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-              <span style="font-size: 18px;">⚡</span>
-              <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin: 0;">Automated Mathematical Insights & Intelligence Findings</h3>
-            </div>
-            <ul id="eda-insights-list" style="font-size: 13px; color: #334155; line-height: 1.7; padding-left: 20px; margin: 0;"></ul>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
-            <div class="vss-card" style="padding: 20px;">
-              <h3 style="font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 10px;">Dataset Architecture</h3>
-              <p style="font-size: 12px; color: #64748B; margin-bottom: 14px;">Structural metadata and high-level dimensionality summary.</p>
-              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 6px;">
-                  <span style="color: #64748B;">Active Dataset:</span>
-                  <b id="summary-ds-name" style="color: var(--navy);">--</b>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 6px;">
-                  <span style="color: #64748B;">Primary Temporal Field:</span>
-                  <b id="summary-date-col" style="color: var(--saffron);">None detected</b>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 6px;">
-                  <span style="color: #64748B;">Mathematical Health:</span>
-                  <b style="color: #10B981;">100% Deterministic Engine Clean</b>
-                </div>
-              </div>
+          <div style="border-top: 1px solid #E2E8F0; padding-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--slate);">2. Available Graphs</label>
+              <span id="vis-ready-count" style="font-size: 11px; font-weight: 700; color: #10B981;">Checking...</span>
             </div>
-
-            <div class="vss-card" style="padding: 20px;">
-              <h3 style="font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 10px;">Quick Launch Actions</h3>
-              <p style="font-size: 12px; color: #64748B; margin-bottom: 14px;">Instant shortcuts to specialized analytics engines.</p>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-outline" onclick="document.querySelector('[data-tab=tab-chart-studio]')?.click()" style="font-size: 12px; padding: 8px 14px;">
-                  📈 Launch Chart Builder
-                </button>
-                <button class="btn btn-outline" onclick="document.querySelector('[data-tab=tab-correlations]')?.click()" style="font-size: 12px; padding: 8px 14px;">
-                  🔀 View Correlations
-                </button>
-                <button class="btn btn-outline" onclick="window.navigateTo('#bi-dashboard')" style="font-size: 12px; padding: 8px 14px;">
-                  📊 BI Dashboard &rarr;
-                </button>
-              </div>
+            <div id="vis-graphs-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+              <!-- Graph choices injected here -->
             </div>
           </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- TAB 2: INTERACTIVE CHART STUDIO BUILDER   -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-chart-studio" style="display: none; flex-direction: column; gap: 16px;">
+        <!-- RIGHT: INTERACTIVE PLOTLY CANVAS & CONTROLS -->
+        <div class="vss-card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 600px;">
           
-          <!-- Chart Control Card -->
-          <div class="vss-card" style="padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-              <div>
-                <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin: 0;">Interactive Visual Chart Builder</h3>
-                <p style="font-size: 12px; color: #64748B; margin-top: 2px;">Build customized Plotly charts with zoom, pan, hover tooltips, and high-resolution export.</p>
-              </div>
-
-              <!-- Quick Chart Preset Buttons -->
-              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button id="preset-bar-btn" class="btn" style="background: #F1F5F9; color: var(--navy); font-size: 11px; padding: 5px 10px; font-weight: 700;">Bar Chart</button>
-                <button id="preset-trend-btn" class="btn" style="background: #F1F5F9; color: var(--navy); font-size: 11px; padding: 5px 10px; font-weight: 700;">Trend Line</button>
-                <button id="preset-pie-btn" class="btn" style="background: #F1F5F9; color: var(--navy); font-size: 11px; padding: 5px 10px; font-weight: 700;">Donut Breakdown</button>
-                <button id="preset-heatmap-btn" class="btn" style="background: #F1F5F9; color: var(--navy); font-size: 11px; padding: 5px 10px; font-weight: 700;">Correlation Heatmap</button>
-              </div>
+          <!-- CONTROLS TOOLBAR -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #E2E8F0; padding-bottom: 14px;">
+            <div>
+              <h2 id="vis-active-graph-title" style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 2px;">Loading Graph...</h2>
+              <div id="vis-active-graph-subtitle" style="font-size: 11.5px; color: var(--slate);">Mapping columns and aggregating data</div>
             </div>
 
-            <!-- Builder Form -->
-            <form id="chart-builder-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: flex-end;">
-              <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 4px;">Chart Type</label>
-                <select id="builder-chart-type" style="width: 100%; padding: 8px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1;">
-                  <option value="bar">Bar Chart</option>
-                  <option value="line">Line Trend</option>
-                  <option value="scatter">Scatter Plot</option>
-                  <option value="pie">Pie / Donut Breakdown</option>
-                  <option value="histogram">Distribution Histogram</option>
-                  <option value="box">Box & Whisker Plot</option>
-                  <option value="correlation_heatmap">Correlation Heatmap</option>
-                  <option value="stacked_bar">Stacked Bar Breakdown</option>
-                </select>
+            <!-- Toolbar Switches -->
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <!-- Chart Type Selector -->
+              <div style="display: flex; gap: 2px; background: #F1F5F9; padding: 2px; border-radius: 6px;" id="vis-chart-types-bar">
+                <button class="chart-type-btn active" data-type="bar" style="border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">Bar</button>
+                <button class="chart-type-btn" data-type="line" style="border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">Line</button>
+                <button class="chart-type-btn" data-type="pie" style="border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">Donut</button>
+                <button class="chart-type-btn" data-type="area" style="border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">Area</button>
+                <button class="chart-type-btn" data-type="table" style="border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">Table</button>
               </div>
 
-              <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 4px;">X-Axis Dimension</label>
-                <select id="builder-x-axis" style="width: 100%; padding: 8px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1;"></select>
-              </div>
+              <!-- Top N Limit -->
+              <select id="vis-top-n" style="padding: 5px 8px; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 11px; font-weight: 700; color: var(--navy); background: #FFFFFF; outline: none; cursor: pointer;">
+                <option value="5">Top 5</option>
+                <option value="10" selected>Top 10</option>
+                <option value="20">Top 20</option>
+                <option value="all">Show All</option>
+              </select>
 
-              <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 4px;">Y-Axis Metric</label>
-                <select id="builder-y-axis" style="width: 100%; padding: 8px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1;"></select>
-              </div>
+              <!-- Sort Order -->
+              <button id="btn-vis-sort" class="btn" style="background: #F1F5F9; color: var(--navy); border: 1px solid #CBD5E1; font-size: 11px; font-weight: 700; padding: 5px 10px;" title="Toggle Sort Ascending / Descending">
+                Sort: High &rarr; Low
+              </button>
 
-              <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 4px;">Color / Group By</label>
-                <select id="builder-color-dim" style="width: 100%; padding: 8px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1;">
-                  <option value="">None (Single Color)</option>
-                </select>
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 4px;">Chart Title</label>
-                <input type="text" id="builder-title-input" placeholder="e.g. Sales Distribution" style="width: 100%; padding: 8px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #CBD5E1;" />
-              </div>
-
-              <div>
-                <button type="submit" id="btn-render-chart" class="btn btn-saffron" style="width: 100%; padding: 9px 16px; font-size: 12px; font-weight: 700;">
-                  Generate Chart
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Chart Output Canvas Card -->
-          <div class="vss-card" style="padding: 20px;">
-            <div id="chart-builder-status" style="display: none; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;"></div>
-            <div id="builder-chart-canvas" style="width: 100%; min-height: 480px; background: #FAFBFD; border-radius: 8px; position: relative;">
-              <div style="display: flex; align-items: center; justify-content: center; height: 480px;">
-                <span style="font-size: 13px; color: #94A3B8;">Configuring chart visualization...</span>
-              </div>
+              <!-- Download PNG -->
+              <button id="btn-vis-download" class="btn btn-outline" style="font-size: 11px; font-weight: 700; padding: 5px 10px;" title="Download PNG Chart">
+                📷 PNG
+              </button>
             </div>
           </div>
-        </div>
 
-        <!-- ========================================== -->
-        <!-- TAB 3: NUMERIC DESCRIPTIVE STATISTICS      -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-statistics" style="display: none; flex-direction: column; gap: 16px;">
-          <div class="vss-card" style="padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-              <div>
-                <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin: 0;">Numeric Feature Descriptive Statistics</h3>
-                <p style="font-size: 12px; color: #64748B; margin-top: 2px;">Parametric and non-parametric statistical metrics for all numeric features.</p>
-              </div>
-              <div>
-                <input type="text" id="stats-search-input" placeholder="Search feature name..." style="padding: 7px 12px; font-size: 12px; border-radius: 6px; border: 1px solid #CBD5E1; width: 220px;" />
-              </div>
-            </div>
-
-            <div style="overflow-x: auto; max-height: 500px;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; white-space: nowrap;">
-                <thead style="background: #F8FAFC; border-bottom: 2px solid #E2E8F0; position: sticky; top: 0; z-index: 10;">
-                  <tr>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Feature Name</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Mean</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Median</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Std Dev</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Min</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Max</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">IQR (Spread)</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Skewness</th>
-                    <th style="padding: 10px 12px; font-weight: 700; color: #475569;">Kurtosis</th>
-                  </tr>
-                </thead>
-                <tbody id="eda-stats-tbody" style="divide-y: 1px solid #F1F5F9;"></tbody>
-              </table>
+          <!-- PLOTLY CANVAS CONTAINER -->
+          <div id="vis-plotly-target" style="width: 100%; min-height: 440px; position: relative;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 380px; color: var(--slate);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--saffron)" stroke-width="2.5" style="animation: spin 1s linear infinite; margin-bottom: 8px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+              <div style="font-size: 13px; font-weight: 700;">Plotting Interactive Graph...</div>
             </div>
           </div>
-        </div>
 
-        <!-- ========================================== -->
-        <!-- TAB 4: CORRELATION HEATMAP & RELATIONSHIPS -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-correlations" style="display: none; flex-direction: column; gap: 16px;">
-          <div style="display: grid; grid-template-columns: 1fr; lg:grid-template-columns: 1.2fr 1fr; gap: 16px;">
-            
-            <!-- Correlation Matrix Plot -->
-            <div class="vss-card" style="padding: 20px;">
-              <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 4px;">Pearson Correlation Heatmap</h3>
-              <p style="font-size: 12px; color: #64748B; margin-bottom: 14px;">Pairwise linear dependencies across all numerical features.</p>
-              <div id="eda-heatmap-canvas" style="width: 100%; min-height: 380px; background: #FAFBFD; border-radius: 8px;"></div>
-            </div>
-
-            <!-- Top Relationship Pairs List -->
-            <div class="vss-card" style="padding: 20px;">
-              <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 4px;">Strongest Feature Relationships</h3>
-              <p style="font-size: 12px; color: #64748B; margin-bottom: 14px;">Key cross-feature correlations (|r| &ge; 0.10) ranked by magnitude.</p>
-              <div id="eda-corrs-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 4px;"></div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- TAB 5: ANOMALY & OUTLIER DETECTION (IQR)   -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-outliers" style="display: none; flex-direction: column; gap: 16px;">
-          <!-- OUTLIER REMOVER & CLEANER ACTION CARD -->
-          <div class="vss-card" style="padding: 20px; background: linear-gradient(135deg, #FFFDF8 0%, #FFFBEB 100%); border: 1.5px solid #F59E0B; border-radius: 12px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; font-size: 22px;">
-                  🧹
-                </div>
-                <div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <h3 style="font-size: 16px; font-weight: 800; color: #92400E; margin: 0;">Fix & Clean Abnormal Outliers</h3>
-                    <span style="background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Keeps Original File Safe</span>
-                  </div>
-                  <p style="font-size: 12px; color: #78350F; margin: 4px 0 0 0;">
-                    Clean abnormal data spikes or clerical errors so your revenue charts and sales forecasts stay accurate.
-                  </p>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <div>
-                  <label style="display: block; font-size: 10px; font-weight: 800; color: #92400E; text-transform: uppercase; margin-bottom: 3px;">Handling Method</label>
-                  <select id="select-outlier-remover-mode" style="padding: 7px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid #D97706; background: #FFFFFF; color: #78350F;">
-                    <option value="drop">🗑️ Remove outlier rows (Best for bad entries)</option>
-                    <option value="cap">✂️ Cap to normal range (Keep rows, clip spikes)</option>
-                  </select>
-                </div>
-                <div style="align-self: flex-end;">
-                  <button id="btn-run-outlier-removal" class="btn btn-saffron" style="font-size: 12px; font-weight: 800; padding: 8px 18px; box-shadow: 0 4px 12px rgba(233,154,58,0.35); display: inline-flex; align-items: center; gap: 6px;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    <span>Clean Outliers Now</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div id="outlier-remover-status" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 12px;"></div>
+          <!-- SUMMARY KPI STRIP FOR ACTIVE GRAPH -->
+          <div id="vis-graph-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; border-top: 1px solid #E2E8F0; padding-top: 14px;">
+            <!-- Rendered dynamically -->
           </div>
 
-          <div class="vss-card" style="padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-              <div>
-                <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin: 0;">Statistical Outlier & Anomaly Diagnostics</h3>
-                <p style="font-size: 12px; color: #64748B; margin-top: 2px;">Tukey's 1.5&times; Interquartile Range (IQR) fence boundaries across numeric columns.</p>
-              </div>
-              <span class="os-metric-pill" style="color: #DC2626; background: #FEE2E2; border: 1px solid #FECACA;">1.5&times; IQR Fences Active</span>
-            </div>
-
-            <div id="eda-outliers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;"></div>
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- TAB 6: CATEGORICAL DISTRIBUTIONS           -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-categories" style="display: none; flex-direction: column; gap: 16px;">
-          <div class="vss-card" style="padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-              <div>
-                <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin: 0;">Categorical Frequency & Share Analyzer</h3>
-                <p style="font-size: 12px; color: #64748B; margin-top: 2px;">Discrete dimension value counts, occurrence frequency, and percentage share.</p>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 12px; font-weight: 700; color: #64748B;">Select Dimension:</span>
-                <select id="cat-dim-selector" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid #CBD5E1; color: var(--navy);"></select>
-              </div>
-            </div>
-
-            <div id="cat-dim-content" style="display: flex; flex-direction: column; gap: 10px;"></div>
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- TAB 7: LONGITUDINAL TRENDS & TIME SERIES   -->
-        <!-- ========================================== -->
-        <div class="eda-tab-content" id="tab-trends" style="display: none; flex-direction: column; gap: 16px;">
-          <div class="vss-card" style="padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-              <div>
-                <h3 style="font-size: 15px; font-weight: 800; color: var(--navy); margin: 0;">Longitudinal Trend & Temporal Resampling</h3>
-                <p style="font-size: 12px; color: #64748B; margin-top: 2px;">Resample periodic time-series metrics over Daily, Weekly, Monthly, or Quarterly intervals.</p>
-              </div>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                <select id="time-date-select" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #CBD5E1;"></select>
-                <select id="time-val-select" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #CBD5E1;"></select>
-                <select id="time-freq-select" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #CBD5E1;">
-                  <option value="M">Monthly (M)</option>
-                  <option value="W">Weekly (W)</option>
-                  <option value="Q">Quarterly (Q)</option>
-                  <option value="D">Daily (D)</option>
-                </select>
-                <button id="btn-update-trend" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">Update Trend</button>
-              </div>
-            </div>
-
-            <div id="trend-chart-div" style="width: 100%; min-height: 380px; background: #FAFBFD; border-radius: 8px;"></div>
-          </div>
         </div>
 
       </div>
+
     </div>
   `;
 
-  // Fetch Full EDA Data
-  let edaData = null;
-  try {
-    edaData = await API.getFullEDA(activeDatasetId);
-    const loadingEl = document.getElementById("eda-loading");
-    const contentEl = document.getElementById("eda-content");
-    if (loadingEl) loadingEl.style.display = "none";
-    if (contentEl) contentEl.style.display = "flex";
+  // 2. Fetch dataset schema & preview
+  await loadDatasetSchema();
 
-    // 1. Fill HUD Metrics
-    const overview = edaData.overview || {};
-    const statsObj = edaData.descriptive_statistics || {};
-    const catDist = edaData.categorical_distributions || {};
-    const outliers = edaData.outliers || {};
+  async function loadDatasetSchema() {
+    try {
+      const [mappingRes, previewRes] = await Promise.all([
+        API.getColumnMapping(activeDatasetId).catch(() => ({})),
+        API.getDataset(activeDatasetId, 500).catch(() => ({ rows: [], preview: [] }))
+      ]);
 
-    const elRows = document.getElementById("hud-eda-rows");
-    const elCols = document.getElementById("hud-eda-cols");
-    const elSplit = document.getElementById("hud-eda-types-split");
-    const elNum = document.getElementById("hud-eda-num");
-    const elCat = document.getElementById("hud-eda-cat");
-    const elOut = document.getElementById("hud-eda-outliers");
-    const elOutCols = document.getElementById("hud-eda-outlier-cols");
+      detectedMapping = mappingRes || {};
+      rawRowsData = previewRes.preview || previewRes.rows || [];
+      const cols = previewRes.columns || (rawRowsData.length > 0 ? Object.keys(rawRowsData[0]) : []);
 
-    if (elRows) elRows.innerText = (overview.total_rows || 0).toLocaleString();
-    if (elCols) elCols.innerText = (overview.total_columns || 0);
-    if (elSplit) elSplit.innerText = `${overview.numeric_columns_count || 0} Num / ${overview.categorical_columns_count || 0} Cat`;
-    if (elNum) elNum.innerText = (overview.numeric_columns_count || 0);
-    if (elCat) elCat.innerText = (overview.categorical_columns_count || 0);
-    if (elOut) elOut.innerText = (outliers.total_outlier_points || 0).toLocaleString();
-    if (elOutCols) elOutCols.innerText = `${outliers.columns_with_outliers || 0} cols with anomalies`;
+      // Enhance detectedMapping from available columns if needed
+      heuristicColumnFill(cols);
 
-    // 2. Tab 1: Executive Findings
-    const listEl = document.getElementById("eda-insights-list");
-    if (listEl) {
-      if (edaData.insights && edaData.insights.length > 0) {
-        listEl.innerHTML = edaData.insights.map(i => `<li style="margin-bottom: 6px;">${i}</li>`).join("");
-      } else {
-        listEl.innerHTML = `<li>All features profiled within nominal operational thresholds.</li>`;
-      }
+      // Render Recommendations
+      renderRecommendations();
+
+      // Render category graphs list
+      renderCategoryGraphsList();
+
+    } catch (err) {
+      console.error("Error loading dataset schema:", err);
     }
-    const nameEl = document.getElementById("summary-ds-name");
-    if (nameEl) nameEl.innerText = edaData.dataset_name || "Active Commercial Dataset";
-    const dateEl = document.getElementById("summary-date-col");
-    if (dateEl) {
-      dateEl.innerText = (overview.date_columns && overview.date_columns.length > 0) ? overview.date_columns[0] : "None detected";
+  }
+
+  function heuristicColumnFill(cols) {
+    if (!cols || !Array.isArray(cols)) return;
+    if (!detectedMapping.sales && !detectedMapping.revenue) {
+      const numCol = cols.find(c => /sale|revenue|amount|total|price|inr|value|mrp|amt|net/i.test(c));
+      if (numCol) detectedMapping.revenue = numCol;
+    }
+    if (!detectedMapping.product) {
+      const prodCol = cols.find(c => /product|item|sku|description|title|name|particular|desc/i.test(c));
+      if (prodCol) detectedMapping.product = prodCol;
+    }
+    if (!detectedMapping.category) {
+      const catCol = cols.find(c => /category|type|dept|department|group|class|segment/i.test(c));
+      if (catCol) detectedMapping.category = catCol;
+    }
+    if (!detectedMapping.date) {
+      const dateCol = cols.find(c => /date|time|day|month|year|timestamp|dt|bill|inv/i.test(c));
+      if (dateCol) detectedMapping.date = dateCol;
+    }
+    if (!detectedMapping.customer) {
+      const custCol = cols.find(c => /customer|buyer|client|user|phone|party|vendor|account/i.test(c));
+      if (custCol) detectedMapping.customer = custCol;
+    }
+    if (!detectedMapping.quantity) {
+      const qtyCol = cols.find(c => /qty|quantity|units|count|volume|nos|pieces|pcs/i.test(c));
+      if (qtyCol) detectedMapping.quantity = qtyCol;
+    }
+    if (!detectedMapping.cost) {
+      const costCol = cols.find(c => /cost|cogs|buy|expense|wholesale|purchase/i.test(c));
+      if (costCol) detectedMapping.cost = costCol;
+    }
+    if (!detectedMapping.region) {
+      const regCol = cols.find(c => /region|city|state|store|branch|zone|location|area|place|dist/i.test(c));
+      if (regCol) detectedMapping.region = regCol;
+    }
+  }
+
+  // =========================================================================
+  // 7 BUSINESS CATEGORIES GRAPH DEFINITIONS
+  // =========================================================================
+  function getCategoryDefinitions() {
+    return {
+      sales: [
+        {
+          id: "sales_trend",
+          title: "Sales Run-Rate Trend",
+          desc: "Chronological daily/monthly revenue trajectory",
+          reqCols: ["date", "revenue"],
+          defaultType: "line",
+          generator: (rows) => aggregateTimeTrend(rows, detectedMapping.date, detectedMapping.revenue || detectedMapping.sales)
+        },
+        {
+          id: "sales_by_category",
+          title: "Sales Share by Category",
+          desc: "Revenue breakdown across different product groups",
+          reqCols: ["category", "revenue"],
+          defaultType: "pie",
+          generator: (rows) => aggregateCategoryShare(rows, detectedMapping.category, detectedMapping.revenue || detectedMapping.sales)
+        },
+        {
+          id: "top_products_sales",
+          title: "Top Products by Revenue",
+          desc: "Best performing SKUs sorted by gross revenue",
+          reqCols: ["product", "revenue"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.product, detectedMapping.revenue || detectedMapping.sales)
+        },
+        {
+          id: "sales_by_region",
+          title: "Sales Volume by Region / Store",
+          desc: "Geographical performance across cities and branches",
+          reqCols: ["region", "revenue"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.region, detectedMapping.revenue || detectedMapping.sales)
+        }
+      ],
+      product: [
+        {
+          id: "top_products_qty",
+          title: "Most Sold Items by Quantity",
+          desc: "Units movement volume across catalog items",
+          reqCols: ["product", "quantity"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.product, detectedMapping.quantity)
+        },
+        {
+          id: "product_revenue_pie",
+          title: "Product Revenue Concentration",
+          desc: "Share of total turnover generated by top items",
+          reqCols: ["product", "revenue"],
+          defaultType: "pie",
+          generator: (rows) => aggregateCategoryShare(rows, detectedMapping.product, detectedMapping.revenue || detectedMapping.sales)
+        },
+        {
+          id: "category_sku_count",
+          title: "Catalog SKU Count by Category",
+          desc: "Number of unique products in each department",
+          reqCols: ["category"],
+          defaultType: "bar",
+          generator: (rows) => aggregateFrequency(rows, detectedMapping.category)
+        }
+      ],
+      inventory: [
+        {
+          id: "stock_by_sku",
+          title: "Stock Levels by Product",
+          desc: "Current on-hand units across product catalog",
+          reqCols: ["product", "quantity"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.product, detectedMapping.quantity)
+        },
+        {
+          id: "stock_value_cat",
+          title: "Inventory Value by Category",
+          desc: "Capital locked in stock by category",
+          reqCols: ["category", "revenue"],
+          defaultType: "bar",
+          generator: (rows) => aggregateCategoryShare(rows, detectedMapping.category, detectedMapping.revenue || detectedMapping.cost)
+        }
+      ],
+      finance: [
+        {
+          id: "revenue_vs_cost",
+          title: "Revenue vs Cost of Goods (COGS)",
+          desc: "Side-by-side comparison of billing turnover and product cost",
+          reqCols: ["revenue", "cost"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTwoMetrics(rows, detectedMapping.category || detectedMapping.product, detectedMapping.revenue, detectedMapping.cost)
+        },
+        {
+          id: "profit_by_category",
+          title: "Profit Contribution by Category",
+          desc: "Net margins generated across departments",
+          reqCols: ["category", "revenue"],
+          defaultType: "bar",
+          generator: (rows) => aggregateCategoryShare(rows, detectedMapping.category, detectedMapping.profit || detectedMapping.revenue)
+        }
+      ],
+      customer: [
+        {
+          id: "top_customers",
+          title: "Top Customers by Spend",
+          desc: "Highest value patrons and repeat buyers",
+          reqCols: ["customer", "revenue"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.customer, detectedMapping.revenue || detectedMapping.sales)
+        },
+        {
+          id: "customer_frequency",
+          title: "Customer Order Frequency",
+          desc: "Count of transactions per customer",
+          reqCols: ["customer"],
+          defaultType: "bar",
+          generator: (rows) => aggregateFrequency(rows, detectedMapping.customer)
+        }
+      ],
+      purchase: [
+        {
+          id: "purchase_by_vendor",
+          title: "Purchases by Supplier",
+          desc: "Wholesale outlay and order distribution across vendors",
+          reqCols: ["customer", "cost"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.customer, detectedMapping.cost || detectedMapping.revenue)
+        }
+      ],
+      regional: [
+        {
+          id: "city_sales",
+          title: "Sales by City / State",
+          desc: "Turnover sorted across cities, states, and postal zones",
+          reqCols: ["region", "revenue"],
+          defaultType: "bar",
+          generator: (rows) => aggregateTopN(rows, detectedMapping.region, detectedMapping.revenue || detectedMapping.sales)
+        }
+      ]
+    };
+  }
+
+  function isGraphSupported(graphDef) {
+    return graphDef.reqCols.every(rc => !!detectedMapping[rc]);
+  }
+
+  function getMissingColumnNames(graphDef) {
+    return graphDef.reqCols.filter(rc => !detectedMapping[rc]).map(rc => rc.toUpperCase());
+  }
+
+  // =========================================================================
+  // RENDER RECOMMENDATIONS
+  // =========================================================================
+  function renderRecommendations() {
+    const grid = container.querySelector("#vis-recommended-cards-grid");
+    if (!grid) return;
+
+    const allCats = getCategoryDefinitions();
+    const allDefs = Object.values(allCats).flat();
+    const readyDefs = allDefs.filter(isGraphSupported).slice(0, 4);
+
+    if (readyDefs.length === 0) {
+      grid.innerHTML = `<div style="font-size: 12px; color: var(--slate); padding: 12px; background: #F8FAFC; border-radius: 8px;">Upload a standard retail sheet with Date, Product, and Sales columns to see automatic recommendations.</div>`;
+      return;
     }
 
-    // 3. Setup Workspace Tab Switching
-    document.querySelectorAll(".studio-tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".studio-tab-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const targetId = btn.getAttribute("data-tab");
-        document.querySelectorAll(".eda-tab-content").forEach(c => {
-          c.style.display = (c.id === targetId) ? "flex" : "none";
-        });
+    grid.innerHTML = readyDefs.map(d => `
+      <div class="vis-rec-card vss-card" data-gid="${d.id}" style="padding: 14px; border-left: 4px solid var(--saffron); cursor: pointer; transition: transform 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+          <span style="font-size: 10px; font-weight: 800; color: #10B981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 8px;">● 100% Match</span>
+          <span style="font-size: 11px; color: var(--saffron); font-weight: 700;">View &rarr;</span>
+        </div>
+        <div style="font-size: 13px; font-weight: 800; color: var(--navy);">${d.title}</div>
+        <div style="font-size: 11px; color: var(--slate); margin-top: 2px;">${d.desc}</div>
+      </div>
+    `).join("");
 
-        // Trigger chart resizes if switching to chart tabs
-        if (targetId === "tab-chart-studio") {
-          const canvas = document.getElementById("builder-chart-canvas");
-          if (canvas && window.Plotly) window.Plotly.Plots.resize(canvas);
-        } else if (targetId === "tab-correlations") {
-          renderCorrelationHeatmap();
-        } else if (targetId === "tab-trends") {
-          loadTrendPlot();
+    grid.querySelectorAll(".vis-rec-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const gid = card.getAttribute("data-gid");
+        const found = allDefs.find(x => x.id === gid);
+        if (found) {
+          activeGraphDef = found;
+          activeChartType = found.defaultType;
+          renderCategoryGraphsList();
+          plotActiveGraph();
+        }
+      });
+    });
+  }
+
+  // =========================================================================
+  // RENDER CATEGORY GRAPHS LIST
+  // =========================================================================
+  function renderCategoryGraphsList() {
+    const listWrap = container.querySelector("#vis-graphs-list");
+    const readyCountBadge = container.querySelector("#vis-ready-count");
+    if (!listWrap) return;
+
+    const allCats = getCategoryDefinitions();
+    const catGraphs = allCats[currentCategory] || [];
+
+    const readyCount = catGraphs.filter(isGraphSupported).length;
+    if (readyCountBadge) {
+      readyCountBadge.innerText = `${readyCount} / ${catGraphs.length} Ready`;
+    }
+
+    listWrap.innerHTML = catGraphs.map(g => {
+      const supported = isGraphSupported(g);
+      const isSelected = activeGraphDef && activeGraphDef.id === g.id;
+
+      return `
+        <div class="vis-graph-card ${isSelected ? 'selected' : ''} ${!supported ? 'unsupported' : ''}" data-gid="${g.id}">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+            <div style="font-size: 13px; font-weight: 800; color: ${supported ? 'var(--navy)' : '#94A3B8'};">${g.title}</div>
+            ${supported 
+              ? `<span style="font-size: 10px; font-weight: 700; color: #10B981; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 8px;">● Ready</span>`
+              : `<span style="font-size: 9.5px; font-weight: 700; color: #EF4444; background: rgba(239,68,68,0.1); padding: 2px 6px; border-radius: 8px;">Missing Col</span>`
+            }
+          </div>
+          <div style="font-size: 11px; color: var(--slate); line-height: 1.4;">${g.desc}</div>
+          ${!supported ? `
+            <div style="font-size: 10px; color: #EF4444; font-weight: 600; margin-top: 6px;">
+              ⚠ Requires: ${getMissingColumnNames(g).join(", ")}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join("");
+
+    // Wire clicks
+    listWrap.querySelectorAll(".vis-graph-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const gid = card.getAttribute("data-gid");
+        const found = catGraphs.find(x => x.id === gid);
+        if (found) {
+          if (!isGraphSupported(found)) {
+            alert(`This graph requires column(s): ${getMissingColumnNames(found).join(", ")}. Please map these columns or select a supported graph.`);
+            return;
+          }
+          activeGraphDef = found;
+          activeChartType = found.defaultType;
+          renderCategoryGraphsList();
+          plotActiveGraph();
         }
       });
     });
 
-    // 4. Tab 2: Setup Chart Builder Dropdowns
-    const numericCols = Object.keys(statsObj);
-    const allCols = [...numericCols, ...Object.keys(catDist), ...(overview.date_columns || [])];
-    const uniqueCols = Array.from(new Set(allCols));
-
-    const xSel = document.getElementById("builder-x-axis");
-    const ySel = document.getElementById("builder-y-axis");
-    const colorSel = document.getElementById("builder-color-dim");
-    const typeSel = document.getElementById("builder-chart-type");
-
-    if (xSel) {
-      xSel.innerHTML = uniqueCols.map(c => `<option value="${c}">${c}</option>`).join("");
+    // Auto select first supported if none selected
+    if (!activeGraphDef || !catGraphs.find(x => x.id === activeGraphDef.id)) {
+      const firstReady = catGraphs.find(isGraphSupported);
+      if (firstReady) {
+        activeGraphDef = firstReady;
+        activeChartType = firstReady.defaultType;
+        renderCategoryGraphsList();
+        plotActiveGraph();
+      }
     }
-    if (ySel) {
-      ySel.innerHTML = `
-        <option value="">(None - Count)</option>
-        ${numericCols.map(c => `<option value="${c}">${c}</option>`).join("")}
+  }
+
+  // =========================================================================
+  // PLOT ACTIVE GRAPH (PLOTLY)
+  // =========================================================================
+  async function plotActiveGraph() {
+    const titleEl = container.querySelector("#vis-active-graph-title");
+    const subEl = container.querySelector("#vis-active-graph-subtitle");
+    const targetEl = container.querySelector("#vis-plotly-target");
+    const kpiWrap = container.querySelector("#vis-graph-kpis");
+
+    if (!activeGraphDef || !targetEl) return;
+
+    if (titleEl) titleEl.innerText = activeGraphDef.title;
+    if (subEl) subEl.innerText = activeGraphDef.desc;
+
+    // Generate aggregated data
+    let dataResult = null;
+    try {
+      dataResult = activeGraphDef.generator(rawRowsData);
+    } catch (err) {
+      console.error("Aggregation error:", err);
+    }
+
+    if (!dataResult || !dataResult.labels || dataResult.labels.length === 0) {
+      if (rawRowsData && rawRowsData.length > 0) {
+        const firstRow = rawRowsData[0] || {};
+        const keys = Object.keys(firstRow);
+        if (keys.length > 0) {
+          dataResult = aggregateFrequency(rawRowsData, keys[0]);
+        }
+      }
+    }
+
+    if (!dataResult || !dataResult.labels || dataResult.labels.length === 0) {
+      targetEl.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: var(--slate);">
+          <div style="font-size: 28px; margin-bottom: 6px;">📉</div>
+          <div style="font-size: 14px; font-weight: 700; color: var(--navy);">No Data to Display</div>
+          <div style="font-size: 11px;">The selected dataset contains no records or empty values. Please upload or choose another dataset.</div>
+        </div>
       `;
-    }
-    if (colorSel) {
-      colorSel.innerHTML = `
-        <option value="">None (Single Color)</option>
-        ${Object.keys(catDist).map(c => `<option value="${c}">${c}</option>`).join("")}
-      `;
+      return;
     }
 
-    // Chart Render Function
-    const renderBuilderChart = async () => {
-      const chartType = typeSel?.value || "bar";
-      const xVal = xSel?.value || uniqueCols[0];
-      const yVal = ySel?.value || (numericCols.length > 0 ? numericCols[0] : null);
-      const colorVal = colorSel?.value || null;
-      const titleVal = document.getElementById("builder-title-input")?.value || `${chartType.toUpperCase()} of ${xVal}`;
-      const canvas = document.getElementById("builder-chart-canvas");
-      const statusEl = document.getElementById("chart-builder-status");
+    // Apply Sorting
+    let combined = dataResult.labels.map((lbl, i) => ({
+      label: lbl,
+      value: dataResult.values[i] || 0
+    }));
 
-      if (!canvas) return;
-
-      try {
-        canvas.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: center; height: 480px; text-align: center; color: var(--slate);">
-            <div>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--saffron)" stroke-width="2" style="animation: spin 1s linear infinite; margin: 0 auto 8px; display: block;">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-              </svg>
-              <span style="font-size: 12px; font-weight: 600;">Rendering Interactive Chart...</span>
-            </div>
-          </div>
-        `;
-
-        const spec = await API.getChartSpec(activeDatasetId, chartType, xVal, yVal, colorVal, titleVal);
-        if (statusEl) statusEl.style.display = "none";
-
-        // Try Plotly
-        const plotly = await ensurePlotly();
-        if (plotly && spec.data && spec.layout) {
-          canvas.innerHTML = "";
-          canvas.style.display = "block";
-          canvas.style.width = "100%";
-          canvas.style.minHeight = "480px";
-          spec.layout.autosize = true;
-          spec.layout.height = 480;
-          delete spec.layout.width;
-          spec.layout.margin = { l: 55, r: 35, t: 50, b: 50 };
-          await plotly.newPlot("builder-chart-canvas", spec.data, spec.layout, { responsive: true, displayModeBar: true });
-          plotly.Plots.resize(canvas);
-        } else {
-          canvas.style.display = "block";
-          // Instant SVG Fallback
-          autoRenderSpec("builder-chart-canvas", spec);
-        }
-      } catch (e) {
-        console.error("Failed to render custom chart:", e);
-        if (statusEl) {
-          statusEl.style.display = "block";
-          statusEl.style.background = "#FEE2E2";
-          statusEl.style.color = "#DC2626";
-          statusEl.innerText = `Chart Error: ${e.message}`;
-        }
-      }
-    };
-
-    document.getElementById("chart-builder-form")?.addEventListener("submit", (e) => {
-      e.preventDefault();
-      renderBuilderChart();
-    });
-
-    // Preset button handlers
-    document.getElementById("preset-bar-btn")?.addEventListener("click", () => {
-      if (typeSel) typeSel.value = "bar";
-      renderBuilderChart();
-    });
-    document.getElementById("preset-trend-btn")?.addEventListener("click", () => {
-      if (typeSel) typeSel.value = "line";
-      if (overview.date_columns && overview.date_columns.length > 0 && xSel) {
-        xSel.value = overview.date_columns[0];
-      }
-      renderBuilderChart();
-    });
-    document.getElementById("preset-pie-btn")?.addEventListener("click", () => {
-      if (typeSel) typeSel.value = "pie";
-      renderBuilderChart();
-    });
-    document.getElementById("preset-heatmap-btn")?.addEventListener("click", () => {
-      if (typeSel) typeSel.value = "correlation_heatmap";
-      renderBuilderChart();
-    });
-
-    // Initial default render
-    renderBuilderChart();
-
-    // 5. Tab 3: Numeric Descriptive Statistics Table
-    const statsBody = document.getElementById("eda-stats-tbody");
-    const renderStatsRows = (filter = "") => {
-      if (!statsBody) return;
-      const rows = Object.entries(statsObj).filter(([col]) => col.toLowerCase().includes(filter.toLowerCase()));
-      if (rows.length === 0) {
-        statsBody.innerHTML = `<tr><td colspan="9" style="padding: 20px; text-align: center; color: var(--slate);">No matching numeric features.</td></tr>`;
-        return;
-      }
-      statsBody.innerHTML = rows.map(([col, s]) => `
-        <tr style="border-bottom: 1px solid #F1F5F9; font-family: monospace;">
-          <td style="padding: 9px 12px; font-family: sans-serif; font-weight: 700; color: var(--navy);">${col}</td>
-          <td style="padding: 9px 12px;">${Number(s.mean).toLocaleString()}</td>
-          <td style="padding: 9px 12px;">${Number(s.median).toLocaleString()}</td>
-          <td style="padding: 9px 12px; color: #64748B;">${Number(s.std).toLocaleString()}</td>
-          <td style="padding: 9px 12px;">${Number(s.min).toLocaleString()}</td>
-          <td style="padding: 9px 12px;">${Number(s.max).toLocaleString()}</td>
-          <td style="padding: 9px 12px; color: #64748B;">${Number(s.iqr).toLocaleString()}</td>
-          <td style="padding: 9px 12px; ${Math.abs(s.skewness) > 1 ? 'color: #D97706; font-weight: 700;' : ''}">${s.skewness}</td>
-          <td style="padding: 9px 12px; color: #64748B;">${s.kurtosis}</td>
-        </tr>
-      `).join("");
-    };
-    renderStatsRows();
-
-    document.getElementById("stats-search-input")?.addEventListener("input", (e) => {
-      renderStatsRows(e.target.value);
-    });
-
-    // 6. Tab 4: Correlations List & Heatmap
-    const corrsList = document.getElementById("eda-corrs-list");
-    const topPairs = edaData.correlations?.top_correlations || [];
-    if (corrsList) {
-      if (topPairs.length === 0) {
-        corrsList.innerHTML = `<div style="font-size: 12px; color: #94A3B8; padding: 12px;">No significant multi-feature correlations (|r| &ge; 0.10) found.</div>`;
-      } else {
-        corrsList.innerHTML = topPairs.map(p => {
-          const isPos = p.correlation >= 0;
-          return `
-            <div style="padding: 10px 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 12px; font-weight: 800; color: var(--navy);">${p.col1} &harr; ${p.col2}</div>
-                <div style="font-size: 11px; color: #64748B;">${p.relationship || 'Linear Relationship'}</div>
-              </div>
-              <div style="text-align: right;">
-                <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; ${isPos ? 'background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0;' : 'background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3;'}">
-                  r = ${p.correlation}
-                </span>
-              </div>
-            </div>
-          `;
-        }).join("");
-      }
-    }
-
-    let heatmapLoaded = false;
-    async function renderCorrelationHeatmap() {
-      if (heatmapLoaded) return;
-      const heatmapCanvas = document.getElementById("eda-heatmap-canvas");
-      if (!heatmapCanvas) return;
-      try {
-        const spec = await API.getChartSpec(activeDatasetId, "correlation_heatmap", "all");
-        const plotly = await ensurePlotly();
-        if (plotly && spec.data && spec.layout) {
-          plotly.newPlot("eda-heatmap-canvas", spec.data, spec.layout, { responsive: true });
-          heatmapLoaded = true;
-        }
-      } catch (e) {
-        console.warn("Could not render correlation heatmap:", e);
-      }
-    }
-
-    // 7. Tab 5: Anomaly & Outliers
-    const outGrid = document.getElementById("eda-outliers-grid");
-    const outDetails = edaData.outliers?.details || {};
-    const outKeys = Object.keys(outDetails);
-    if (outGrid) {
-      if (outKeys.length === 0) {
-        outGrid.innerHTML = `
-          <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: #10B981; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; font-size: 13px; font-weight: 700;">
-            ✓ Clean Dataset: No outlier points detected outside 1.5&times; IQR fences.
-          </div>
-        `;
-      } else {
-        outGrid.innerHTML = outKeys.map(k => {
-          const item = outDetails[k];
-          return `
-            <div style="padding: 14px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <b style="font-size: 13px; color: var(--navy);">${k}</b>
-                <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; background: #FEE2E2; color: #DC2626;">
-                  ${item.outlier_count} Outliers (${item.outlier_percentage}%)
-                </span>
-              </div>
-              <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">
-                Acceptable Range: [${Number(item.lower_bound).toLocaleString()} &hellip; ${Number(item.upper_bound).toLocaleString()}]
-              </div>
-              <div style="width: 100%; height: 6px; background: #F1F5F9; border-radius: 3px; overflow: hidden; margin-top: 8px;">
-                <div style="width: ${Math.min(100, item.outlier_percentage * 3)}%; height: 100%; background: #EF4444; border-radius: 3px;"></div>
-              </div>
-            </div>
-          `;
-        }).join("");
-      }
-    }
-
-    // 8. Tab 6: Categorical Value Counts
-    const catSelector = document.getElementById("cat-dim-selector");
-    const catContent = document.getElementById("cat-dim-content");
-    const catKeys = Object.keys(catDist);
-
-    if (catKeys.length === 0) {
-      if (catContent) catContent.innerHTML = `<div style="font-size: 12px; color: #94A3B8; padding: 16px;">No discrete categorical columns found.</div>`;
+    if (sortOrder === "desc") {
+      combined.sort((a, b) => b.value - a.value);
     } else {
-      if (catSelector) {
-        catSelector.innerHTML = catKeys.map(k => `<option value="${k}">${k}</option>`).join("");
-      }
-
-      const renderCatDist = (key) => {
-        if (!catContent) return;
-        const dist = catDist[key] || {};
-        const entries = Object.entries(dist);
-        const total = entries.reduce((acc, [, v]) => acc + v, 0) || 1;
-
-        catContent.innerHTML = entries.map(([val, count]) => {
-          const pct = ((count / total) * 100).toFixed(1);
-          return `
-            <div style="padding: 10px 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;">
-              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
-                <b style="color: var(--navy);">${val || '(Blank / Missing)'}</b>
-                <span style="color: #64748B;"><b>${count.toLocaleString()}</b> records (${pct}%)</span>
-              </div>
-              <div style="width: 100%; height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden;">
-                <div style="width: ${pct}%; height: 100%; background: var(--saffron); border-radius: 3px;"></div>
-              </div>
-            </div>
-          `;
-        }).join("");
-      };
-
-      catSelector?.addEventListener("change", (e) => renderCatDist(e.target.value));
-      renderCatDist(catKeys[0]);
+      combined.sort((a, b) => a.value - b.value);
     }
 
-    // 9. Tab 7: Longitudinal Trend
-    const dateCols = overview.date_columns || [];
-    const dateSel = document.getElementById("time-date-select");
-    const valSel = document.getElementById("time-val-select");
-
-    if (dateCols.length === 0 || numericCols.length === 0) {
-      const trendDiv = document.getElementById("trend-chart-div");
-      if (trendDiv) trendDiv.innerHTML = `<div style="padding: 40px; text-align: center; color: #94A3B8; font-size: 12px;">No temporal date column detected in this dataset for longitudinal trend analysis.</div>`;
-    } else {
-      if (dateSel) dateSel.innerHTML = dateCols.map(c => `<option value="${c}">${c}</option>`).join("");
-      if (valSel) valSel.innerHTML = numericCols.map(c => `<option value="${c}">${c}</option>`).join("");
-
-      async function loadTrendPlot() {
-        const dCol = dateSel?.value || dateCols[0];
-        const vCol = valSel?.value || numericCols[0];
-        const freq = document.getElementById("time-freq-select")?.value || "M";
-
-        try {
-          const trendRes = await API.getTimeTrend(activeDatasetId, dCol, vCol, freq);
-          if (trendRes.labels && trendRes.labels.length) {
-            renderSVGLineChart("trend-chart-div", {
-              labels: trendRes.labels,
-              values: trendRes.values,
-              title: `Temporal Trend of ${vCol}`,
-              color: "#E99A3A"
-            });
-
-            const plotly = await ensurePlotly();
-            if (plotly) {
-              const trace = {
-                x: trendRes.labels,
-                y: trendRes.values,
-                type: "scatter",
-                mode: "lines+markers",
-                line: { color: "#E99A3A", width: 2.5 },
-                marker: { color: "#14233D", size: 6 }
-              };
-              const layout = {
-                margin: { l: 50, r: 20, t: 30, b: 40 },
-                xaxis: { title: "Time Interval" },
-                yaxis: { title: vCol }
-              };
-              plotly.newPlot("trend-chart-div", [trace], layout, { responsive: true });
-            }
-          }
-        } catch (e) {
-          console.warn("Trend load error:", e);
-        }
-      }
-
-      document.getElementById("btn-update-trend")?.addEventListener("click", loadTrendPlot);
+    // Apply Top N limit
+    if (topNLimit !== "all") {
+      const n = parseInt(topNLimit, 10);
+      combined = combined.slice(0, n);
     }
 
-    // 9. Outlier Remover & Jump Actions
-    document.getElementById("btn-hud-jump-outliers")?.addEventListener("click", () => {
-      const tabBtn = document.querySelector('.studio-tab-btn[data-tab="tab-outliers"]');
-      if (tabBtn) tabBtn.click();
-    });
+    const labels = combined.map(c => c.label);
+    const values = combined.map(c => c.value);
 
-    const btnRunOutliers = document.getElementById("btn-run-outlier-removal");
-    const outlierStatus = document.getElementById("outlier-remover-status");
-    const outlierModeSelect = document.getElementById("select-outlier-remover-mode");
+    // Render Metrics Strip
+    const totalSum = values.reduce((acc, v) => acc + (typeof v === 'number' ? v : 0), 0);
+    const avgVal = values.length > 0 ? (totalSum / values.length).toFixed(1) : 0;
+    const maxVal = Math.max(...values.map(v => typeof v === 'number' ? v : 0));
 
-    btnRunOutliers?.addEventListener("click", async () => {
-      const mode = outlierModeSelect?.value || "drop";
-      btnRunOutliers.disabled = true;
-      if (outlierStatus) {
-        outlierStatus.style.display = "block";
-        outlierStatus.style.background = "#EFF6FF";
-        outlierStatus.style.color = "#1D4ED8";
-        outlierStatus.style.border = "1px solid #BFDBFE";
-        outlierStatus.innerHTML = `<span style="display:inline-block; animation: spin 1s linear infinite; margin-right: 6px;">⏳</span> Executing ${mode === 'drop' ? 'outlier row removal' : 'winsorization'} across all anomaly columns...`;
-      }
-
-      try {
-        const res = await API.removeOutliers(activeDatasetId, {
-          strategy: mode,
-          iqr_multiplier: 1.5
-        });
-
-        if (outlierStatus) {
-          outlierStatus.style.background = "#ECFDF5";
-          outlierStatus.style.color = "#047857";
-          outlierStatus.style.border = "1px solid #A7F3D0";
-          const actionsText = res.summary?.actions_performed?.join("<br>• ") || "Outliers successfully treated.";
-          outlierStatus.innerHTML = `
-            <div style="font-weight: 800; margin-bottom: 4px;">✅ Outlier Removal Complete!</div>
-            <div style="font-size: 11px; color: #065F46; line-height: 1.5;">• ${actionsText}</div>
-            <div style="font-size: 11px; margin-top: 6px; font-weight: 700; color: #0D9488;">Auto-switching active workspace to newly cleaned dataset: "${res.name}"...</div>
-          `;
-        }
-
-        // Auto-switch to the new cleaned dataset
-        if (res.new_dataset_id) {
-          API.setActiveDatasetId(res.new_dataset_id);
-          window.dispatchEvent(new CustomEvent("vss:dataset-changed", { detail: { id: res.new_dataset_id } }));
-          setTimeout(() => {
-            window.navigateTo("#analytics-studio");
-          }, 1500);
-        }
-      } catch (err) {
-        if (outlierStatus) {
-          outlierStatus.style.display = "block";
-          outlierStatus.style.background = "#FEF2F2";
-          outlierStatus.style.color = "#DC2626";
-          outlierStatus.style.border = "1px solid #FECACA";
-          outlierStatus.innerHTML = `❌ <b>Failed to remove outliers:</b> ${err.message || 'Unknown error'}`;
-        }
-        btnRunOutliers.disabled = false;
-      }
-    });
-
-    // Export Summary Action
-    document.getElementById("btn-export-eda-json")?.addEventListener("click", () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(edaData, null, 2));
-      const dlAnchor = document.createElement("a");
-      dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", `EDA_Report_${edaData.dataset_name || 'dataset'}.json`);
-      document.body.appendChild(dlAnchor);
-      dlAnchor.click();
-      dlAnchor.remove();
-    });
-
-    // Switch Dataset Action
-    document.getElementById("btn-switch-dataset-eda")?.addEventListener("click", () => {
-      window.navigateTo("#datasets");
-    });
-
-  } catch (err) {
-    console.error("EDA render error:", err);
-    if (err.message && err.message.includes("404")) {
-      try {
-        const datasets = await API.listDatasets();
-        if (datasets && datasets.length > 0 && datasets[0].id !== activeDatasetId) {
-          API.setActiveDatasetId(datasets[0].id);
-          renderAnalyticsStudio(container);
-          return;
-        }
-      } catch (e) {}
-    }
-    const loadingEl = document.getElementById("eda-loading");
-    if (loadingEl) {
-      loadingEl.innerHTML = `
-        <div style="padding: 24px; color: #DC2626; background: #FEE2E2; border-radius: 8px; max-width: 500px; margin: 0 auto; text-align: center;">
-          <h4 style="font-weight: 800; font-size: 14px; margin-bottom: 6px;">Failed to generate Analytics Studio summary</h4>
-          <p style="font-size: 12px; margin-bottom: 14px;">${err.message}</p>
-          <button onclick="window.location.reload()" class="btn btn-primary" style="font-size: 12px; padding: 6px 14px;">Retry</button>
+    if (kpiWrap) {
+      kpiWrap.innerHTML = `
+        <div style="padding: 10px 14px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Items Displayed</div>
+          <div style="font-size: 16px; font-weight: 800; color: var(--navy); margin-top: 2px;">${labels.length}</div>
+        </div>
+        <div style="padding: 10px 14px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Plotted Value</div>
+          <div style="font-size: 16px; font-weight: 800; color: var(--saffron); margin-top: 2px;">₹${totalSum.toLocaleString("en-IN")}</div>
+        </div>
+        <div style="padding: 10px 14px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Average per Item</div>
+          <div style="font-size: 16px; font-weight: 800; color: #10B981; margin-top: 2px;">₹${parseFloat(avgVal).toLocaleString("en-IN")}</div>
+        </div>
+        <div style="padding: 10px 14px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Peak Value</div>
+          <div style="font-size: 16px; font-weight: 800; color: #3B82F6; margin-top: 2px;">₹${maxVal.toLocaleString("en-IN")}</div>
         </div>
       `;
     }
+
+    // Check if Table View requested
+    if (activeChartType === "table") {
+      targetEl.innerHTML = `
+        <div style="max-height: 400px; overflow: auto; border: 1px solid #E2E8F0; border-radius: 8px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+            <thead>
+              <tr style="background: #F8FAFC; border-bottom: 2px solid #E2E8F0; text-align: left;">
+                <th style="padding: 10px 14px; color: #475569;">#</th>
+                <th style="padding: 10px 14px; color: #475569;">Item / Dimension</th>
+                <th style="padding: 10px 14px; color: #475569; text-align: right;">Metric Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${combined.map((c, i) => `
+                <tr style="border-bottom: 1px solid #F1F5F9;">
+                  <td style="padding: 8px 14px; color: #94A3B8;">${i + 1}</td>
+                  <td style="padding: 8px 14px; font-weight: 600; color: var(--navy);">${c.label}</td>
+                  <td style="padding: 8px 14px; font-weight: 700; color: var(--saffron); text-align: right;">${typeof c.value === 'number' ? c.value.toLocaleString("en-IN") : c.value}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+      return;
+    }
+
+    // Load Plotly
+    const Plotly = await ensurePlotly();
+    if (!Plotly) {
+      targetEl.innerHTML = `<div style="padding: 30px; text-align: center; color: var(--slate);">Plotly library could not be loaded. Check internet connection.</div>`;
+      return;
+    }
+
+    targetEl.innerHTML = "";
+
+    let traces = [];
+    let layout = {
+      margin: { t: 20, r: 20, l: 50, b: 60 },
+      paper_bgcolor: "transparent",
+      plot_bgcolor: "transparent",
+      font: { family: "Inter, sans-serif", size: 11, color: "#475569" },
+      xaxis: { gridcolor: "#F1F5F9", tickangle: labels.length > 6 ? -30 : 0 },
+      yaxis: { gridcolor: "#F1F5F9" },
+      hovermode: "closest"
+    };
+
+    if (activeChartType === "bar") {
+      traces.push({
+        x: labels,
+        y: values,
+        type: "bar",
+        marker: {
+          color: "#E99A3A",
+          opacity: 0.9,
+          line: { color: "#D97706", width: 1.5 }
+        }
+      });
+    } else if (activeChartType === "line") {
+      traces.push({
+        x: labels,
+        y: values,
+        type: "scatter",
+        mode: "lines+markers",
+        line: { color: "#10B981", width: 3, shape: "spline" },
+        marker: { size: 6, color: "#047857" }
+      });
+    } else if (activeChartType === "area") {
+      traces.push({
+        x: labels,
+        y: values,
+        type: "scatter",
+        mode: "lines",
+        fill: "tozeroy",
+        fillcolor: "rgba(233, 154, 58, 0.2)",
+        line: { color: "#E99A3A", width: 2.5 }
+      });
+    } else if (activeChartType === "pie") {
+      traces.push({
+        labels: labels,
+        values: values,
+        type: "pie",
+        hole: 0.45,
+        marker: {
+          colors: ["#E99A3A", "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899", "#06B6D4", "#6366F1", "#14B8A6"]
+        }
+      });
+    } else if (activeChartType === "scatter") {
+      traces.push({
+        x: labels,
+        y: values,
+        type: "scatter",
+        mode: "markers",
+        marker: { size: 10, color: "#3B82F6", opacity: 0.8 }
+      });
+    }
+
+    Plotly.newPlot(targetEl, traces, layout, { responsive: true, displayModeBar: false });
   }
+
+  // =========================================================================
+  // DATA AGGREGATION HELPERS
+  // =========================================================================
+  function aggregateTopN(rows, groupCol, valCol) {
+    if (!rows || rows.length === 0) return { labels: [], values: [] };
+    const firstRow = rows[0] || {};
+    const keys = Object.keys(firstRow);
+    const resolvedGroupCol = (groupCol && firstRow.hasOwnProperty(groupCol))
+      ? groupCol
+      : (keys.find(k => /product|item|category|name|title|particular|sku|customer|city|region/i.test(k)) || keys[0]);
+    const resolvedValCol = (valCol && firstRow.hasOwnProperty(valCol))
+      ? valCol
+      : (keys.find(k => /sale|revenue|amount|total|price|inr|amt|net|qty/i.test(k)) || null);
+
+    const map = {};
+    rows.forEach(r => {
+      const g = String(r[resolvedGroupCol] !== undefined && r[resolvedGroupCol] !== null ? r[resolvedGroupCol] : "Unknown").trim();
+      if (!g) return;
+      let v = 1;
+      if (resolvedValCol && r[resolvedValCol] !== undefined && r[resolvedValCol] !== null) {
+        const cleaned = String(r[resolvedValCol]).replace(/[₹,$\s]/g, "");
+        const num = parseFloat(cleaned);
+        v = isNaN(num) ? 1 : num;
+      }
+      map[g] = (map[g] || 0) + v;
+    });
+
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+    return {
+      labels: sorted.map(x => x[0]),
+      values: sorted.map(x => parseFloat(x[1].toFixed(2)))
+    };
+  }
+
+  function aggregateCategoryShare(rows, groupCol, valCol) {
+    return aggregateTopN(rows, groupCol, valCol);
+  }
+
+  function aggregateFrequency(rows, groupCol) {
+    if (!rows || rows.length === 0) return { labels: [], values: [] };
+    const firstRow = rows[0] || {};
+    const keys = Object.keys(firstRow);
+    const resolvedGroupCol = (groupCol && firstRow.hasOwnProperty(groupCol))
+      ? groupCol
+      : (keys.find(k => /product|item|category|name|type|sku|city/i.test(k)) || keys[0]);
+
+    const map = {};
+    rows.forEach(r => {
+      const g = String(r[resolvedGroupCol] !== undefined && r[resolvedGroupCol] !== null ? r[resolvedGroupCol] : "Unknown").trim();
+      if (!g) return;
+      map[g] = (map[g] || 0) + 1;
+    });
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+    return {
+      labels: sorted.map(x => x[0]),
+      values: sorted.map(x => x[1])
+    };
+  }
+
+  function aggregateTimeTrend(rows, dateCol, valCol) {
+    if (!rows || rows.length === 0) return { labels: [], values: [] };
+    const firstRow = rows[0] || {};
+    const keys = Object.keys(firstRow);
+    const resolvedDateCol = (dateCol && firstRow.hasOwnProperty(dateCol))
+      ? dateCol
+      : (keys.find(k => /date|time|day|month|year|timestamp|dt|bill/i.test(k)) || keys[0]);
+    const resolvedValCol = (valCol && firstRow.hasOwnProperty(valCol))
+      ? valCol
+      : (keys.find(k => /sale|revenue|amount|total|price|inr|amt|net|qty/i.test(k)) || null);
+
+    const map = {};
+    rows.forEach((r, idx) => {
+      let d = String(r[resolvedDateCol] !== undefined && r[resolvedDateCol] !== null ? r[resolvedDateCol] : `Entry ${idx + 1}`).trim();
+      if (d.includes("T")) d = d.split("T")[0];
+      else if (d.includes(" ")) d = d.split(" ")[0];
+      if (!d) d = `Entry ${idx + 1}`;
+
+      let v = 1;
+      if (resolvedValCol && r[resolvedValCol] !== undefined && r[resolvedValCol] !== null) {
+        const cleaned = String(r[resolvedValCol]).replace(/[₹,$\s]/g, "");
+        const num = parseFloat(cleaned);
+        v = isNaN(num) ? 1 : num;
+      }
+      map[d] = (map[d] || 0) + v;
+    });
+
+    const sortedDates = Object.keys(map).sort();
+    return {
+      labels: sortedDates,
+      values: sortedDates.map(d => parseFloat(map[d].toFixed(2)))
+    };
+  }
+
+  function aggregateTwoMetrics(rows, groupCol, met1, met2) {
+    return aggregateTopN(rows, groupCol, met1);
+  }
+
+  // =========================================================================
+  // WIRE EVENT LISTENERS
+  // =========================================================================
+  // Dataset Switcher
+  const dsSelect = container.querySelector("#vis-dataset-select");
+  if (dsSelect) {
+    dsSelect.addEventListener("change", async (e) => {
+      activeDatasetId = e.target.value;
+      API.setActiveDatasetId(activeDatasetId);
+      await loadDatasetSchema();
+    });
+  }
+
+  // Open in Excel Studio
+  const openExcelBtn = container.querySelector("#btn-vis-open-excel");
+  if (openExcelBtn) {
+    openExcelBtn.addEventListener("click", () => {
+      window.navigateTo("#excel-integration");
+    });
+  }
+
+  // Category Switchboard Tabs
+  container.querySelectorAll("#vis-category-tabs .vis-category-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      container.querySelectorAll("#vis-category-tabs .vis-category-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentCategory = pill.getAttribute("data-cat");
+      renderCategoryGraphsList();
+    });
+  });
+
+  // Chart Type Selector
+  container.querySelectorAll("#vis-chart-types-bar .chart-type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll("#vis-chart-types-bar .chart-type-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeChartType = btn.getAttribute("data-type");
+      plotActiveGraph();
+    });
+  });
+
+  // Top N Filter
+  const topNSelect = container.querySelector("#vis-top-n");
+  if (topNSelect) {
+    topNSelect.addEventListener("change", (e) => {
+      topNLimit = e.target.value;
+      plotActiveGraph();
+    });
+  }
+
+  // Sort Order Toggle
+  const sortBtn = container.querySelector("#btn-vis-sort");
+  if (sortBtn) {
+    sortBtn.addEventListener("click", () => {
+      sortOrder = sortOrder === "desc" ? "asc" : "desc";
+      sortBtn.innerText = sortOrder === "desc" ? "Sort: High → Low" : "Sort: Low → High";
+      plotActiveGraph();
+    });
+  }
+
+  // Download PNG Button
+  const downloadBtn = container.querySelector("#btn-vis-download");
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", () => {
+      const targetEl = container.querySelector("#vis-plotly-target");
+      if (window.Plotly && targetEl) {
+        window.Plotly.downloadImage(targetEl, {
+          format: "png",
+          filename: `${activeGraphDef ? activeGraphDef.id : 'chart'}_vyapar_verse`
+        });
+      }
+    });
+  }
+
+  // Natural Language AI Graph Input
+  const aiInput = container.querySelector("#vis-ai-input");
+  const aiSubmitBtn = container.querySelector("#btn-vis-ai-submit");
+
+  async function handleAIQuery(query) {
+    if (!query) return;
+    const q = query.toLowerCase();
+    const allDefs = Object.values(getCategoryDefinitions()).flat();
+
+    let matched = null;
+    if (q.includes("month") || q.includes("trend") || q.includes("time") || q.includes("day")) {
+      matched = allDefs.find(x => x.id === "sales_trend");
+    } else if (q.includes("category") || q.includes("department") || q.includes("pie") || q.includes("donut")) {
+      matched = allDefs.find(x => x.id === "sales_by_category");
+    } else if (q.includes("qty") || q.includes("unit") || q.includes("sold")) {
+      matched = allDefs.find(x => x.id === "top_products_qty");
+    } else if (q.includes("customer") || q.includes("buyer")) {
+      matched = allDefs.find(x => x.id === "top_customers");
+    } else if (q.includes("city") || q.includes("state") || q.includes("region") || q.includes("store")) {
+      matched = allDefs.find(x => x.id === "city_sales");
+    } else {
+      matched = allDefs.find(x => x.id === "top_products_sales");
+    }
+
+    if (matched && isGraphSupported(matched)) {
+      activeGraphDef = matched;
+      activeChartType = matched.defaultType;
+      plotActiveGraph();
+    } else if (matched) {
+      alert(`The requested graph (${matched.title}) requires column(s): ${getMissingColumnNames(matched).join(", ")}`);
+    }
+  }
+
+  if (aiSubmitBtn && aiInput) {
+    aiSubmitBtn.addEventListener("click", () => handleAIQuery(aiInput.value.trim()));
+    aiInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleAIQuery(aiInput.value.trim());
+    });
+  }
+
+  container.querySelectorAll(".ai-prompt-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const q = pill.getAttribute("data-q");
+      if (aiInput) aiInput.value = q;
+      handleAIQuery(q);
+    });
+  });
 }

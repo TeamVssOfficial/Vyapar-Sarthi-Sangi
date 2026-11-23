@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, Header, Request
+from fastapi import Depends, HTTPException, status, Header, Request, Query
 from sqlalchemy.orm import Session
 import time
 
@@ -28,12 +28,17 @@ def clear_auth_cache(user_id: str | None = None):
 async def get_current_user(
     request: Request,
     authorization: str | None = Header(None),
+    token_query: str | None = Query(None, alias="token"),
     db: Session = Depends(get_db)
 ) -> User:
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
-    elif "token" in request.cookies:
+    elif token_query:
+        token = token_query.strip()
+    elif "token" in request.query_params and request.query_params.get("token"):
+        token = request.query_params.get("token").strip()
+    elif "token" in request.cookies and request.cookies.get("token"):
         token = request.cookies.get("token")
 
     if not token:

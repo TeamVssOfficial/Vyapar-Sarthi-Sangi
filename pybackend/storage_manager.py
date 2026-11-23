@@ -36,6 +36,7 @@ def get_user_storage_dirs(user_id: str, user_name: str | None = None) -> dict[st
         "root": base_user_dir,
         "uploads": base_user_dir / "uploads",
         "processed": base_user_dir / "processed",
+        "cleaned": base_user_dir / "processed",
         "reports": base_user_dir / "reports",
         "models": base_user_dir / "models"
     }

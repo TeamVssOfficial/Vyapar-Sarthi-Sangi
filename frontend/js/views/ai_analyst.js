@@ -1,4 +1,5 @@
 import { API } from "../api.js";
+import { formatMarkdown } from "../utils/markdown_renderer.js";
 
 export async function renderAIAnalyst(container) {
   const activeDatasetId = API.getActiveDatasetId();
@@ -183,11 +184,7 @@ export async function renderAIAnalyst(container) {
       document.getElementById(loadingId)?.remove();
 
       // Convert Markdown-style formatting to clean HTML
-      let formattedAnswer = res.answer
-        .replace(/### (.*)/g, '<h4 class="font-bold text-sm text-[#14233D] mt-2 mb-1">$1</h4>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/- (.*)/g, '<li class="ml-4 list-disc">$1</li>')
-        .replace(/\n\n/g, '<br/><br/>');
+      let formattedAnswer = formatMarkdown(res.answer || res.response || "");
 
       const actions = res.suggested_actions || [];
 

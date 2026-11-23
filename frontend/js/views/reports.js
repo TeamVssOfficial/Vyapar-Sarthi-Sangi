@@ -5,15 +5,15 @@ export async function renderReports(container) {
 
   if (!activeDatasetId) {
     container.innerHTML = `
-      <div class="vss-card p-12 text-center max-w-lg mx-auto mt-8" style="padding: 40px 30px; text-align: center; max-width: 540px; margin: 40px auto;">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245,158,11,0.15); color: #F59E0B; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">📋</div>
-        <h3 style="font-size: 18px; font-weight: 800; color: #14233D; margin-bottom: 8px;">No Active Dataset Selected</h3>
-        <p style="font-size: 13px; color: #64748B; margin-bottom: 24px; line-height: 1.6;">Select a dataset from the Datasets Hub to generate commercial PDF and Excel intelligence reports, or return to the Business OS Launchpad.</p>
+      <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 40px 30px; text-align: center; max-width: 560px; margin: 40px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(245,158,11,0.15); color: #F59E0B; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 26px;">📋</div>
+        <h3 style="font-size: 19px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; font-family: var(--font-heading);">No Active Dataset Selected</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">Please select or upload a dataset (e.g. sales records or invoices) from the Datasets Hub to generate commercial PDF and Excel intelligence reports.</p>
         <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-          <button onclick="window.navigateTo('#overview')" class="btn" style="background: rgba(20, 35, 61, 0.08); color: #14233D; border: 1px solid #CBD5E1; font-weight: 700; padding: 10px 20px; font-size: 13px;">
-            &larr; Back to Business OS
+          <button onclick="window.navigateTo('#overview')" class="btn btn-outline" style="font-weight: 700; padding: 10px 20px; font-size: 13px;">
+            &larr; Back to Launchpad
           </button>
-          <button onclick="window.navigateTo('#datasets')" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px; font-weight: 700;">
+          <button onclick="window.navigateTo('#datasets')" class="btn btn-saffron" style="padding: 10px 20px; font-size: 13px; font-weight: 800;">
             Go to Datasets Hub &rarr;
           </button>
         </div>
@@ -23,157 +23,362 @@ export async function renderReports(container) {
   }
 
   container.innerHTML = `
-    <div class="space-y-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(225,29,72,0.18); color: #E11D48; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(225,29,72,0.15);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="12" cy="15" r="2.5" fill="#E11D48"></circle><line x1="12" y1="11" x2="12" y2="12"></line></svg>
+    <div style="max-width: 1300px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+      
+      <!-- Executive Header with Human Indian Touch -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 24px;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(233, 154, 58, 0.15); color: var(--saffron); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(233,154,58,0.15);">
+            📄
           </div>
           <div>
-            <h1 class="text-2xl font-bold text-[#14233D] brand-font" style="margin: 0;">Executive Reports & Exports</h1>
-            <p class="text-sm text-slate-500" style="margin-top: 2px;">Generate executive boardroom PDF briefings and structured multi-sheet Excel workbooks for stakeholders.</p>
-          </div>
-        </div>
-        <button onclick="window.navigateTo('#overview')" class="btn btn-outline" style="font-size: 12px; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
-          <span>&larr;</span> Back to Business OS
-        </button>
-      </div>
-
-      <!-- Action Cards for Export -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- PDF Card -->
-        <div class="vss-card p-6 flex flex-col justify-between border-t-4 border-t-[#14233D]">
-          <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-[#14233D]/10 text-[#14233D] flex items-center justify-center">
-              <i data-lucide="file-text" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-base font-bold text-[#14233D] brand-font">Executive PDF Briefing</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">
-              Synthesizes commercial KPIs, top performing categories, data quality health scores, and critical alerts into a publication-ready management document.
+            <h1 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0; font-family: var(--font-heading); display: flex; align-items: center; gap: 10px;">
+              Executive Reports & Exports
+              <span style="font-size: 11px; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10B981; padding: 3px 10px; border-radius: 20px;">Deterministic v2.0</span>
+            </h1>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+              नमस्ते! Boardroom PDF briefings & structured Excel workbooks with bank-grade Zero-Hallucination math.
             </p>
           </div>
-          <div class="pt-6">
-            <button id="btn-generate-pdf" class="w-full bg-[#14233D] hover:bg-[#0C1729] text-white py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition shadow">
-              <i data-lucide="download" class="w-4 h-4 text-[#E99A3A]"></i> Generate Executive PDF
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button onclick="window.navigateTo('#overview')" class="btn btn-outline" style="font-size: 12.5px; padding: 8px 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            <span>&larr;</span> Back to Business OS
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Cards for Export (Adaptive Light & Dark System, Mobile Touch Optimized) -->
+      <div class="export-grid">
+        
+        <!-- 1. Executive PDF Briefing Card -->
+        <div class="export-card export-card-pdf">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div class="export-badge-pdf">
+                📄 Boardroom Intelligence
+              </div>
+              <span style="font-size: 11px; font-weight: 700; color: #10B981;">✓ Visual Graphs Ready</span>
+            </div>
+
+            <h3 class="export-card-title">
+              Executive PDF Briefing (बोर्ड बैठक रिपोर्ट)
+            </h3>
+            
+            <p class="export-card-desc">
+              Synthesizes commercial KPIs, sales velocity, category revenue share, working capital receivables, data health scores, and strategic directives into a 2-page boardroom presentation.
+            </p>
+
+            <!-- PDF Customization Controls -->
+            <div class="export-config-panel">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <!-- Language Option -->
+                <div>
+                  <label class="export-field-label">
+                    Language / भाषा
+                  </label>
+                  <select id="pdf-opt-language" class="export-control-select">
+                    <option value="en" selected>Executive English (Boardroom Standard)</option>
+                    <option value="bilingual">Bilingual (English + Hindi Context)</option>
+                  </select>
+                </div>
+
+                <!-- Theme Option -->
+                <div>
+                  <label class="export-field-label">
+                    Theme / थीम
+                  </label>
+                  <select id="pdf-opt-theme" class="export-control-select">
+                    <option value="light" selected>Corporate Light (लाइट)</option>
+                    <option value="dark">Executive Dark (डार्क)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Graphs Toggle -->
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-main); font-weight: 600;">
+                <input type="checkbox" id="pdf-opt-charts" checked style="accent-color: #E99A3A; width: 16px; height: 16px; cursor: pointer;" />
+                <label for="pdf-opt-charts" style="cursor: pointer;">
+                  Include High-Resolution Dual-Panel Charts (ग्राफ़ शामिल करें)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pinned Generate Button Container -->
+          <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border-color);">
+            <button id="btn-generate-pdf" class="export-btn-pdf">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Generate Executive PDF Briefing</span>
             </button>
           </div>
         </div>
 
-        <!-- Excel Card -->
-        <div class="vss-card p-6 flex flex-col justify-between border-t-4 border-t-[#31856C]">
-          <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-[#31856C]/10 text-[#31856C] flex items-center justify-center">
-              <i data-lucide="sheet" class="w-6 h-6"></i>
+        <!-- 2. Comprehensive Excel Audit Card -->
+        <div class="export-card export-card-excel">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div class="export-badge-excel">
+                📊 Spreadsheet Audit (.xlsx)
+              </div>
+              <span style="font-size: 11px; font-weight: 700; color: #10B981;">6 Multi-Worksheets</span>
             </div>
-            <h3 class="text-base font-bold text-[#14233D] brand-font">Comprehensive Excel Audit (.xlsx)</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">
-              Multi-tab spreadsheet workbook including Dataset Summary, Column Data Profiling, Numeric Descriptive Statistics, Category Breakdowns, and Data Samples.
+
+            <h3 class="export-card-title">
+              Comprehensive Excel Audit Workbook
+            </h3>
+            
+            <p class="export-card-desc">
+              Exports a structured enterprise spreadsheet workbook featuring automatic cross-tabulation, category breakdowns, working capital aging, numeric statistics, and audit-ready data samples.
             </p>
+
+            <div class="export-features-box">
+              <div class="export-features-heading">Included Excel Worksheets:</div>
+              <ul class="export-features-list">
+                <li><b>Sheet 1:</b> Executive Dashboard & Commercial Posture</li>
+                <li><b>Sheet 2:</b> Category Performance & Market Share Breakdown</li>
+                <li><b>Sheet 3:</b> Working Capital Aging & Invoice Receivables</li>
+                <li><b>Sheet 4:</b> Numeric Feature Distributions & Statistical Summary</li>
+                <li><b>Sheet 5:</b> Column Health Profiles & Data Quality Audit</li>
+                <li><b>Sheet 6:</b> Verified Raw Data Samples (Top 250 Rows)</li>
+              </ul>
+            </div>
           </div>
-          <div class="pt-6">
-            <button id="btn-generate-excel" class="w-full bg-[#31856C] hover:bg-[#256c57] text-white py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition shadow">
-              <i data-lucide="download" class="w-4 h-4 text-[#E99A3A]"></i> Generate Multi-Tab Excel Workbook
+
+          <!-- Pinned Generate Button Container -->
+          <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border-color);">
+            <button id="btn-generate-excel" class="export-btn-excel">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Generate Multi-Tab Excel Workbook</span>
             </button>
           </div>
         </div>
+
       </div>
 
-      <div id="report-generation-status" class="hidden text-xs p-3 rounded-lg"></div>
+      <!-- Live Generation Status Banner -->
+      <div id="report-generation-status" style="display: none; padding: 14px 18px; border-radius: 10px; margin-bottom: 24px; font-size: 13px; font-weight: 600; line-height: 1.5;"></div>
 
       <!-- Generated Reports History Table -->
-      <div class="vss-card overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 class="font-bold text-[#14233D] text-sm brand-font">Generated Reports History</h3>
-          <span class="text-xs text-slate-400">Available for Immediate Download</span>
+      <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0;">Generated Reports History</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 2px 0 0 0;">Historical exports generated for this active dataset</p>
+          </div>
+          <span style="font-size: 11px; font-weight: 700; color: #10B981; background: rgba(16, 185, 129, 0.15); padding: 4px 10px; border-radius: 20px;">
+            Available for Immediate Download
+          </span>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] border-b">
-              <tr>
-                <th class="p-3">Report Title</th>
-                <th class="p-3">Format</th>
-                <th class="p-3">Created</th>
-                <th class="p-3 text-right">Download</th>
+
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12.5px;">
+            <thead>
+              <tr style="background: var(--card-bg); border-bottom: 2px solid var(--border-color); color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
+                <th style="padding: 12px 18px;">Report Title</th>
+                <th style="padding: 12px 18px;">Format</th>
+                <th style="padding: 12px 18px;">Created (IST)</th>
+                <th style="padding: 12px 18px; text-align: right;">Download Action</th>
               </tr>
             </thead>
-            <tbody id="reports-table-body" class="divide-y divide-slate-100">
-              <tr><td colspan="4" class="p-6 text-center text-slate-400">Loading reports history...</td></tr>
+            <tbody id="reports-table-body">
+              <tr>
+                <td colspan="4" style="padding: 24px; text-align: center; color: var(--text-muted);">Loading reports history...</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   `;
 
-  if (window.lucide) window.lucide.createIcons();
+  const statusEl = container.querySelector("#report-generation-status");
 
-  const statusEl = document.getElementById("report-generation-status");
+  function showStatus(msg, type = "info", downloadUrl = null, reportId = null, reportTitle = null) {
+    if (!statusEl) return;
+    statusEl.style.display = "block";
+    let downloadHtml = "";
+    if (downloadUrl) {
+      downloadHtml = `
+        <div style="margin-top: 10px;">
+          <a href="${downloadUrl}" target="_blank" id="status-download-btn" class="btn" style="background: #14233D; color: #FFFFFF; font-size: 12px; padding: 7px 16px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+            <span>⬇</span> Download File Now
+          </a>
+        </div>
+      `;
+    }
+    statusEl.innerHTML = `<div>${msg}</div>${downloadHtml}`;
+
+    if (reportId) {
+      const btn = statusEl.querySelector("#status-download-btn");
+      if (btn) {
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          const orig = btn.innerHTML;
+          btn.innerHTML = `<span>⏳</span> Downloading...`;
+          try {
+            await API.downloadReportFile(reportId, reportTitle || "Executive_Report");
+          } catch (err) {
+            window.open(downloadUrl, "_blank");
+          } finally {
+            btn.innerHTML = orig;
+          }
+        };
+      }
+    }
+
+    if (type === "success") {
+      statusEl.style.background = "#DCFCE7";
+      statusEl.style.color = "#15803D";
+      statusEl.style.border = "1px solid #86EFAC";
+    } else if (type === "error") {
+      statusEl.style.background = "#FEE2E2";
+      statusEl.style.color = "#B91C1C";
+      statusEl.style.border = "1px solid #FCA5A5";
+    } else {
+      statusEl.style.background = "#EFF6FF";
+      statusEl.style.color = "#1E40AF";
+      statusEl.style.border = "1px solid #BFDBFE";
+    }
+  }
 
   async function loadReportsTable() {
     try {
       const reports = await API.listReports(activeDatasetId);
-      const tbody = document.getElementById("reports-table-body");
+      const tbody = container.querySelector("#reports-table-body");
       if (!tbody) return;
-      if (reports.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No reports generated yet for this dataset. Click a button above to create one.</td></tr>`;
-      } else {
-        tbody.innerHTML = reports.map(r => `
-          <tr class="hover:bg-slate-50">
-            <td class="p-3 font-semibold text-[#14233D] flex items-center gap-2">
-              <i data-lucide="${r.report_type === 'pdf' ? 'file-text' : 'sheet'}" class="w-4 h-4 ${r.report_type === 'pdf' ? 'text-red-500' : 'text-emerald-600'}"></i>
-              ${r.title}
+
+      if (!Array.isArray(reports) || reports.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="padding: 24px; text-align: center; color: var(--text-muted);">
+              No reports generated yet for this dataset. Click a button above to generate a boardroom PDF or Excel audit.
             </td>
-            <td class="p-3 uppercase font-mono font-bold text-slate-500">${r.report_type}</td>
-            <td class="p-3 text-slate-500">${new Date(r.created_at).toLocaleString()}</td>
-            <td class="p-3 text-right">
-              <a href="${API.getDownloadUrl(r.id)}" target="_blank" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-[#14233D] rounded text-xs font-semibold inline-flex items-center gap-1 transition">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = reports.map(r => {
+        const isPdf = (r.report_type === "pdf");
+        const formatBadge = isPdf
+          ? `<span style="background: rgba(239, 68, 68, 0.15); color: #EF4444; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 6px;">PDF</span>`
+          : `<span style="background: rgba(16, 185, 129, 0.15); color: #10B981; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 6px;">EXCEL</span>`;
+
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "--";
+        const downloadUrl = API.getDownloadUrl(r.id);
+
+        return `
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 14px 18px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+              <span>${isPdf ? '📄' : '📊'}</span>
+              <span>${r.title}</span>
+            </td>
+            <td style="padding: 14px 18px;">${formatBadge}</td>
+            <td style="padding: 14px 18px; color: var(--text-muted);">${dateStr}</td>
+            <td style="padding: 14px 18px; text-align: right;">
+              <a href="${downloadUrl}" data-report-id="${r.id}" data-report-title="${r.title}" target="_blank" class="btn btn-outline btn-download-report" style="font-size: 11.5px; padding: 6px 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px;">
+                <span>⬇</span> Download
               </a>
             </td>
           </tr>
-        `).join("");
-        if (window.lucide) window.lucide.createIcons();
-      }
+        `;
+      }).join("");
+
+      tbody.onclick = async (e) => {
+        const btn = e.target.closest(".btn-download-report");
+        if (!btn) return;
+        const reportId = btn.getAttribute("data-report-id");
+        const reportTitle = btn.getAttribute("data-report-title");
+        if (!reportId) return;
+        e.preventDefault();
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = `<span>⏳</span> Downloading...`;
+        try {
+          await API.downloadReportFile(reportId, reportTitle);
+        } catch (err) {
+          console.warn("Direct blob download failed, falling back to direct URL:", err);
+          window.open(btn.href, "_blank");
+        } finally {
+          btn.innerHTML = origHtml;
+        }
+      };
+
     } catch (e) {
       console.error("Error loading reports table:", e);
     }
   }
 
-  // Generate PDF
-  document.getElementById("btn-generate-pdf")?.addEventListener("click", async () => {
-    statusEl.className = "text-xs p-3 rounded-lg bg-slate-100 text-slate-700 flex items-center gap-2";
-    statusEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#E99A3A]"></i> Generating executive PDF with ReportLab...`;
-    statusEl.classList.remove("hidden");
-    if (window.lucide) window.lucide.createIcons();
+  // Generate PDF Handler
+  const btnPdf = container.querySelector("#btn-generate-pdf");
+  if (btnPdf) {
+    btnPdf.onclick = async () => {
+      const lang = container.querySelector("#pdf-opt-language")?.value || "bilingual";
+      const theme = container.querySelector("#pdf-opt-theme")?.value || "light";
+      const includeCharts = !!container.querySelector("#pdf-opt-charts")?.checked;
 
-    try {
-      await API.generateReport(activeDatasetId, "pdf");
-      statusEl.className = "text-xs p-3 rounded-lg bg-green-50 text-green-700 border border-green-200";
-      statusEl.innerText = "Executive PDF successfully generated and saved!";
-      await loadReportsTable();
-    } catch (err) {
-      statusEl.className = "text-xs p-3 rounded-lg bg-red-50 text-red-600 border border-red-200";
-      statusEl.innerText = "Error generating PDF: " + err.message;
-    }
-  });
+      btnPdf.disabled = true;
+      btnPdf.innerHTML = `<span>⏳</span> Compiling Executive PDF...`;
+      showStatus("Generating executive boardroom PDF briefing with high-resolution visual charts & bilingual typography...", "info");
 
-  // Generate Excel
-  document.getElementById("btn-generate-excel")?.addEventListener("click", async () => {
-    statusEl.className = "text-xs p-3 rounded-lg bg-slate-100 text-slate-700 flex items-center gap-2";
-    statusEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#E99A3A]"></i> Compiling multi-sheet Excel workbook...`;
-    statusEl.classList.remove("hidden");
-    if (window.lucide) window.lucide.createIcons();
+      try {
+        const res = await API.generateReport(activeDatasetId, "pdf", {
+          language: lang,
+          theme: theme,
+          include_charts: includeCharts,
+          title: `Executive Intelligence Briefing (${theme.toUpperCase()} - ${lang.toUpperCase()})`
+        });
 
-    try {
-      await API.generateReport(activeDatasetId, "excel");
-      statusEl.className = "text-xs p-3 rounded-lg bg-green-50 text-green-700 border border-green-200";
-      statusEl.innerText = "Comprehensive Excel Workbook successfully generated!";
-      await loadReportsTable();
-    } catch (err) {
-      statusEl.className = "text-xs p-3 rounded-lg bg-red-50 text-red-600 border border-red-200";
-      statusEl.innerText = "Error generating Excel: " + err.message;
-    }
-  });
+        const dlUrl = API.getDownloadUrl(res.report_id);
+        showStatus(`✓ Executive PDF successfully generated and saved! (${theme.toUpperCase()} Theme, ${lang.toUpperCase()})`, "success", dlUrl, res.report_id, res.title);
+        await loadReportsTable();
+      } catch (err) {
+        showStatus(`Error generating PDF: ${err.message}`, "error");
+      } finally {
+        btnPdf.disabled = false;
+        btnPdf.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Generate Executive PDF Briefing</span>
+        `;
+      }
+    };
+  }
 
+  // Generate Excel Handler
+  const btnExcel = container.querySelector("#btn-generate-excel");
+  if (btnExcel) {
+    btnExcel.onclick = async () => {
+      btnExcel.disabled = true;
+      btnExcel.innerHTML = `<span>⏳</span> Compiling Multi-Sheet Excel Workbook...`;
+      showStatus("Compiling structured multi-sheet Excel audit workbook...", "info");
+
+      try {
+        const res = await API.generateReport(activeDatasetId, "excel", {
+          title: `Comprehensive Commercial Audit (.xlsx)`
+        });
+        const dlUrl = API.getDownloadUrl(res.report_id);
+        showStatus("✓ Comprehensive Excel Workbook successfully generated and indexed!", "success", dlUrl, res.report_id, res.title);
+        await loadReportsTable();
+      } catch (err) {
+        showStatus(`Error generating Excel: ${err.message}`, "error");
+      } finally {
+        btnExcel.disabled = false;
+        btnExcel.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Generate Multi-Tab Excel Workbook</span>
+        `;
+      }
+    };
+  }
+
+  // Sync active theme with PDF dropdown
+  const curTheme = document.documentElement.getAttribute("data-theme") || "light";
+  const pdfThemeSelect = container.querySelector("#pdf-opt-theme");
+  if (pdfThemeSelect) {
+    pdfThemeSelect.value = curTheme;
+  }
+
+  // Initial load of history
   await loadReportsTable();
 }

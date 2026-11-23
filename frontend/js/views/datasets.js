@@ -287,7 +287,7 @@ async function loadDatasetList() {
 
     window.openInStudio = (id) => {
       API.setActiveDatasetId(id);
-      window.navigateTo("#data-studio");
+      window.navigateTo("#bi-dashboard");
     };
 
     window.deleteDataset = async (id) => {

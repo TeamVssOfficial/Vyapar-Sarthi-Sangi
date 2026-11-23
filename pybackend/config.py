@@ -38,7 +38,13 @@ class Settings(BaseSettings):
         "https://vyapar-sarthi-sangi.onrender.com"
     ]
 
-    # AI provider keys & JWT secret shared with Node backend
+    # AI provider keys & OpenRouter configuration
+    OPENROUTER_API_KEY: str | None = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_BASE_URL: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+    VSS_CENTRAL_MODEL: str = os.getenv("VSS_CENTRAL_MODEL", os.getenv("VSS_PRIMARY_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free"))
+    VSS_FAST_MODEL: str = os.getenv("VSS_FAST_MODEL", "google/gemma-4-26b-a4b-it:free")
+    VSS_REASONING_MODEL: str = os.getenv("VSS_REASONING_MODEL", "google/gemma-4-31b-it:free")
+    VSS_MULTIMODAL_MODEL: str = os.getenv("VSS_MULTIMODAL_MODEL", "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free")
     OPENAI_API_KEY: str | None = None
     JWT_SECRET: str = os.getenv("JWT_SECRET", "vss_ai_production_jwt_secret_key")
 

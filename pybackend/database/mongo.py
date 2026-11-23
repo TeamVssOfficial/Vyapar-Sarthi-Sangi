@@ -50,6 +50,13 @@ MODEL_COLLECTION_MAP = {
     "AIConversation": "ai_conversations",
     "AIMessage": "ai_messages",
     "AuditLog": "audit_logs",
+    "Workbook": "workbooks",
+    "OTPVerification": "otp_verifications",
+    "SubscriptionPlan": "subscription_plans",
+    "UserSubscription": "user_subscriptions",
+    "PaymentTransaction": "payment_transactions",
+    "TrialExtensionHistory": "trial_extension_history",
+    "AdminSubscriptionAction": "admin_subscription_actions",
 }
 
 
@@ -94,6 +101,12 @@ class MongoQuery:
         if left is not None and right is not None:
             field_name = getattr(left, "name", str(left).split(".")[-1])
             val = getattr(right, "value", right)
+            if type(val).__name__ == "False_":
+                val = False
+            elif type(val).__name__ == "True_":
+                val = True
+            elif type(val).__name__ == "Null":
+                val = None
 
             # Handle primary key / id field
             if field_name == "id":
@@ -169,12 +182,34 @@ class MongoQuery:
         flt = self._compile_filter()
         return self.collection.count_documents(flt)
 
+    def update(self, values: dict) -> int:
+        """
+        Executes bulk update on matching documents, supporting both raw dict keys
+        and SQLAlchemy Column attributes.
+        """
+        flt = self._compile_filter()
+        clean_values = {}
+        for k, v in values.items():
+            k_name = getattr(k, "name", str(k).split(".")[-1])
+            clean_values[k_name] = v
+        res = self.collection.update_many(flt, {"$set": clean_values})
+        return res.modified_count
+
+    def delete(self) -> int:
+        """
+        Executes bulk delete on matching documents.
+        """
+        flt = self._compile_filter()
+        res = self.collection.delete_many(flt)
+        return res.deleted_count
+
 
 class MongoSession:
     def __init__(self, db=None):
         self.db = db if db is not None else get_mongo_db()
         self._staged_items = []
         self._deleted_items = []
+        self._tracked_items = []
 
     def query(self, model_cls: Type[Any]) -> MongoQuery:
         return MongoQuery(self, model_cls)
@@ -189,6 +224,10 @@ class MongoSession:
             self._save_instance(item)
         self._staged_items.clear()
 
+        # Persist modified tracked instances loaded during this session
+        for item in list(self._tracked_items):
+            self._save_instance(item)
+
         for item in list(self._deleted_items):
             self._delete_instance(item)
         self._deleted_items.clear()
@@ -199,6 +238,7 @@ class MongoSession:
     def rollback(self):
         self._staged_items.clear()
         self._deleted_items.clear()
+        self._tracked_items.clear()
 
     def refresh(self, instance: Any):
         coll_name = get_collection_name_for_model(instance.__class__)
@@ -217,6 +257,7 @@ class MongoSession:
     def close(self):
         self._staged_items.clear()
         self._deleted_items.clear()
+        self._tracked_items.clear()
 
     def _save_instance(self, instance: Any):
         coll_name = get_collection_name_for_model(instance.__class__)
@@ -291,6 +332,8 @@ class MongoSession:
 
         self._update_instance_from_doc(instance, doc)
         instance._session = self
+        if instance not in self._tracked_items:
+            self._tracked_items.append(instance)
         return instance
 
     def _update_instance_from_doc(self, instance: Any, doc: Dict[str, Any]):

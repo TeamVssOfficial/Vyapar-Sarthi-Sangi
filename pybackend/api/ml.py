@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field
 from pathlib import Path
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session
 from database.connection import get_db
 from database.models import User, Business, Dataset, MLModel, Prediction, AuditLog
 from auth.dependencies import get_current_user, get_current_business
+from auth.subscription_guard import require_active_subscription
 from config import settings
 from api.datasets import load_dataset_df
 from engines.ml.task_detection import detect_ml_tasks
@@ -42,7 +44,8 @@ class PredictRequest(BaseModel):
 def get_ml_tasks(
     dataset_id: str,
     business: Business = Depends(get_current_business),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _sub: Any = Depends(require_active_subscription)
 ):
     dataset = db.query(Dataset).filter(Dataset.id == dataset_id, Dataset.business_id == business.id).first()
     if not dataset:

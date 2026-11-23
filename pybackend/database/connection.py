@@ -32,7 +32,16 @@ def init_db():
             db.user_businesses.create_index([("user_id", 1), ("business_id", 1)])
             db.ai_messages.create_index("conversation_id")
             db.audit_logs.create_index("timestamp")
+            db.user_subscriptions.create_index("user_id")
+            db.subscription_plans.create_index("code")
+            db.payment_transactions.create_index("order_id")
+            db.trial_extension_history.create_index("user_id")
         except Exception:
+            pass
+        try:
+            from services.subscription_service import ensure_default_plans
+            ensure_default_plans(MongoSession())
+        except Exception as _e:
             pass
         print("✓ Connected to MongoDB Atlas database:", db.name)
     except Exception as e:

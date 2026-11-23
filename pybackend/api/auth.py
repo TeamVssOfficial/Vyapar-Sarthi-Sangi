@@ -2,23 +2,55 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 import httpx
+import secrets
+import hashlib
+from datetime import datetime, timedelta
 
 from database.connection import get_db
-from database.models import User, Business, UserBusiness
+from database.models import User, Business, UserBusiness, OTPVerification
 from auth.security import hash_password, verify_password, create_access_token
 from auth.dependencies import get_current_user
 from config import settings, PROJECT_DIR
 from storage_manager import get_user_storage_dirs, save_encrypted_dataset, load_encrypted_dataframe
+from services.email_service import send_otp_email
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+def _hash_otp(code: str) -> str:
+    salt = settings.JWT_SECRET or "vss_ai_salt"
+    return hashlib.sha256(f"{code.strip()}:{salt}".encode()).hexdigest()
 
 
 class RegisterRequest(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
     password: str = Field(min_length=8)
+    confirm_password: str | None = None
     business_name: str | None = None
     industry: str | None = "General Business"
+
+
+class VerifyOTPRequest(BaseModel):
+    email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    otp: str = Field(min_length=6, max_length=6)
+    purpose: str = "signup"
+
+
+class ResendOTPRequest(BaseModel):
+    email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    purpose: str = "signup"
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    otp: str = Field(min_length=6, max_length=6)
+    new_password: str = Field(min_length=8)
+    confirm_password: str | None = None
 
 
 class LoginRequest(BaseModel):
@@ -28,23 +60,29 @@ class LoginRequest(BaseModel):
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(req: RegisterRequest, response: Response, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == req.email.lower()).first()
-    if existing:
+    if req.confirm_password and req.password != req.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password and confirm password do not match."
+        )
+
+    clean_email = req.email.lower().strip()
+    existing = db.query(User).filter(User.email == clean_email).first()
+    if existing and getattr(existing, "is_verified", True):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="A user with this email address already exists."
+            detail="A user with this email address already exists. Please sign in."
         )
 
     # 1. Forward and persist user into MongoDB backend (port 3000)
     node_user_id = None
-    node_token = None
     try:
         with httpx.Client(timeout=3.0) as client:
             node_resp = client.post(
                 f"{settings.NODE_BACKEND_URL}/api/user/register",
                 json={
                     "name": req.name.strip(),
-                    "email": req.email.lower().strip(),
+                    "email": clean_email,
                     "password": req.password
                 }
             )
@@ -53,18 +91,18 @@ def register(req: RegisterRequest, response: Response, db: Session = Depends(get
                 node_u = data.get("user")
                 if node_u:
                     node_user_id = str(node_u.get("_id") or node_u.get("id"))
-                node_token = data.get("token")
     except Exception as e:
         print("Note: Node.js/MongoDB forward registration error:", e)
 
-    # 2. Persist user and business workspace in database
-    user = db.query(User).filter(User.email == req.email.lower().strip()).first()
+    # 2. Persist user (unverified pending OTP confirmation)
+    user = existing
     if not user:
         user_kwargs = {
             "name": req.name.strip(),
-            "email": req.email.lower().strip(),
+            "email": clean_email,
             "password_hash": hash_password(req.password),
-            "role": "user"
+            "role": "user",
+            "is_verified": False
         }
         if node_user_id:
             user_kwargs["id"] = node_user_id
@@ -73,17 +111,15 @@ def register(req: RegisterRequest, response: Response, db: Session = Depends(get
         db.add(user)
         db.flush()
     else:
-        # User was already inserted in MongoDB by Node backend; ensure password hash is set
-        if not getattr(user, "password_hash", None) or user.password_hash == "[synced_from_node_backend]":
-            user.password_hash = hash_password(req.password)
-            db.add(user)
-            db.flush()
+        user.name = req.name.strip()
+        user.password_hash = hash_password(req.password)
+        user.is_verified = False
+        db.add(user)
+        db.flush()
 
-    # Create initial business workspace if not already present
+    # Create initial business workspace
     existing_memberships = db.query(UserBusiness).filter(UserBusiness.user_id == user.id).all()
-    if existing_memberships and existing_memberships[0].business:
-        business = existing_memberships[0].business
-    else:
+    if not existing_memberships or not existing_memberships[0].business:
         biz_name = req.business_name.strip() if req.business_name else f"{user.name}'s Enterprise"
         business = Business(
             name=biz_name,
@@ -100,28 +136,275 @@ def register(req: RegisterRequest, response: Response, db: Session = Depends(get
         )
         db.add(rel)
         db.commit()
-        db.refresh(user)
+    else:
+        db.commit()
+
+    # 3. Generate secure 6-digit OTP
+    otp_code = f"{secrets.randbelow(1000000):06d}"
+
+    # Invalidate previous unverified signup OTPs for this email
+    db.query(OTPVerification).filter(
+        OTPVerification.email == clean_email,
+        OTPVerification.otp_type == "signup",
+        OTPVerification.is_used == False
+    ).update({"is_used": True})
+
+    otp_record = OTPVerification(
+        email=clean_email,
+        otp_hash=_hash_otp(otp_code),
+        otp_type="signup",
+        expires_at=datetime.utcnow() + timedelta(minutes=5),
+        is_used=False,
+        attempts=0
+    )
+    db.add(otp_record)
+    db.commit()
+
+    # 4. Dispatch Email OTP
+    send_otp_email(to_email=clean_email, otp_code=otp_code, name=req.name.strip(), purpose="signup")
+
+    return {
+        "status": "otp_required",
+        "message": f"Verification code sent to {clean_email}. Please enter the 6-digit OTP.",
+        "email": clean_email
+    }
+
+
+@router.post("/verify-otp")
+def verify_otp(req: VerifyOTPRequest, response: Response, db: Session = Depends(get_db)):
+    clean_email = req.email.lower().strip()
+    submitted_otp = req.otp.strip()
+
+    otp_record = db.query(OTPVerification).filter(
+        OTPVerification.email == clean_email,
+        OTPVerification.otp_type == req.purpose,
+        OTPVerification.is_used == False
+    ).order_by(OTPVerification.created_at.desc()).first()
+
+    if not otp_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active verification code found. Please request a new OTP."
+        )
+
+    if datetime.utcnow() > otp_record.expires_at:
+        otp_record.is_used = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code has expired. Please request a new OTP."
+        )
+
+    if otp_record.attempts >= 5:
+        otp_record.is_used = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many invalid attempts. This OTP has been invalidated for security. Please request a new one."
+        )
+
+    if _hash_otp(submitted_otp) != otp_record.otp_hash:
+        otp_record.attempts += 1
+        db.commit()
+        remaining = 5 - otp_record.attempts
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid verification code. {remaining} attempt(s) remaining."
+        )
+
+    # OTP is valid!
+    otp_record.is_used = True
+
+    user = db.query(User).filter(User.email == clean_email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account associated with this OTP was not found."
+        )
+
+    user.is_verified = True
+    user.is_active = True
+    db.commit()
+    db.refresh(user)
 
     # Provision user's dedicated encrypted storage tree
     get_user_storage_dirs(user.id, user.name)
 
-    token = node_token or create_access_token({"userID": user.id, "email": user.email, "role": user.role})
+    token = create_access_token({"userID": user.id, "email": user.email, "role": user.role})
     response.set_cookie(key="token", value=token, httponly=True, samesite="lax")
 
+    user_businesses_list = [ub for ub in (user.businesses or []) if ub and getattr(ub, "business", None)]
+    user_businesses = [
+        {
+            "id": ub.business.id,
+            "name": ub.business.name,
+            "industry": ub.business.industry,
+            "role": ub.role
+        }
+        for ub in user_businesses_list
+    ]
+
     return {
-        "message": "Registration successful (persisted to MongoDB & local workspace)",
+        "status": "verified",
+        "message": "Account verified successfully! Welcome to Vyapar Verse.",
         "user": {
             "id": user.id,
             "name": user.name,
             "email": user.email,
             "role": user.role
         },
-        "business": {
-            "id": business.id,
-            "name": business.name,
-            "industry": business.industry
-        },
+        "businesses": user_businesses,
         "token": token
+    }
+
+
+@router.post("/resend-otp")
+def resend_otp(req: ResendOTPRequest, db: Session = Depends(get_db)):
+    clean_email = req.email.lower().strip()
+
+    user = db.query(User).filter(User.email == clean_email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account registered with this email address."
+        )
+
+    # Check 60-second cooldown
+    latest_otp = db.query(OTPVerification).filter(
+        OTPVerification.email == clean_email,
+        OTPVerification.otp_type == req.purpose
+    ).order_by(OTPVerification.created_at.desc()).first()
+
+    if latest_otp and (datetime.utcnow() - latest_otp.created_at) < timedelta(seconds=60):
+        wait_seconds = 60 - int((datetime.utcnow() - latest_otp.created_at).total_seconds())
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Please wait {wait_seconds} seconds before requesting another code."
+        )
+
+    # Invalidate previous OTPs
+    db.query(OTPVerification).filter(
+        OTPVerification.email == clean_email,
+        OTPVerification.otp_type == req.purpose,
+        OTPVerification.is_used == False
+    ).update({"is_used": True})
+
+    otp_code = f"{secrets.randbelow(1000000):06d}"
+    otp_record = OTPVerification(
+        email=clean_email,
+        otp_hash=_hash_otp(otp_code),
+        otp_type=req.purpose,
+        expires_at=datetime.utcnow() + timedelta(minutes=5),
+        is_used=False,
+        attempts=0
+    )
+    db.add(otp_record)
+    db.commit()
+
+    send_otp_email(to_email=clean_email, otp_code=otp_code, name=user.name, purpose=req.purpose)
+
+    return {
+        "status": "resent",
+        "message": f"A new verification code has been dispatched to {clean_email}."
+    }
+
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    clean_email = req.email.lower().strip()
+
+    user = db.query(User).filter(User.email == clean_email).first()
+    # Always return a generic success message to prevent user enumeration
+    if not user:
+        return {
+            "status": "otp_sent",
+            "message": f"If an account exists for {clean_email}, a password reset code has been sent."
+        }
+
+    # Invalidate previous forgot_password OTPs
+    db.query(OTPVerification).filter(
+        OTPVerification.email == clean_email,
+        OTPVerification.otp_type == "forgot_password",
+        OTPVerification.is_used == False
+    ).update({"is_used": True})
+
+    otp_code = f"{secrets.randbelow(1000000):06d}"
+    otp_record = OTPVerification(
+        email=clean_email,
+        otp_hash=_hash_otp(otp_code),
+        otp_type="forgot_password",
+        expires_at=datetime.utcnow() + timedelta(minutes=5),
+        is_used=False,
+        attempts=0
+    )
+    db.add(otp_record)
+    db.commit()
+
+    send_otp_email(to_email=clean_email, otp_code=otp_code, name=user.name, purpose="forgot_password")
+
+    return {
+        "status": "otp_sent",
+        "message": f"If an account exists for {clean_email}, a password reset code has been sent."
+    }
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    if req.confirm_password and req.new_password != req.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Passwords do not match."
+        )
+
+    clean_email = req.email.lower().strip()
+    submitted_otp = req.otp.strip()
+
+    otp_record = db.query(OTPVerification).filter(
+        OTPVerification.email == clean_email,
+        OTPVerification.otp_type == "forgot_password",
+        OTPVerification.is_used == False
+    ).order_by(OTPVerification.created_at.desc()).first()
+
+    if not otp_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active reset code found. Please request a new password reset."
+        )
+
+    if datetime.utcnow() > otp_record.expires_at:
+        otp_record.is_used = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset code has expired. Please request a new code."
+        )
+
+    if _hash_otp(submitted_otp) != otp_record.otp_hash:
+        otp_record.attempts += 1
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset code. Please check your email and try again."
+        )
+
+    otp_record.is_used = True
+    db.add(otp_record)
+
+    user = db.query(User).filter(User.email == clean_email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account was not found."
+        )
+
+    user.password_hash = hash_password(req.new_password)
+    user.is_verified = True
+    db.add(user)
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": "Password updated successfully. You can now sign in with your new credentials."
     }
 
 
@@ -191,6 +474,30 @@ def login(req: LoginRequest, response: Response, db: Session = Depends(get_db)):
         # Verify or provision user's dedicated encrypted storage tree on login
         get_user_storage_dirs(user.id, user.name)
 
+        if getattr(user, "is_verified", True) is False:
+            otp_code = f"{secrets.randbelow(1000000):06d}"
+            db.query(OTPVerification).filter(
+                OTPVerification.email == user.email,
+                OTPVerification.otp_type == "signup",
+                OTPVerification.is_used == False
+            ).update({"is_used": True})
+            otp_record = OTPVerification(
+                email=user.email,
+                otp_hash=_hash_otp(otp_code),
+                otp_type="signup",
+                expires_at=datetime.utcnow() + timedelta(minutes=5),
+                is_used=False,
+                attempts=0
+            )
+            db.add(otp_record)
+            db.commit()
+            send_otp_email(to_email=user.email, otp_code=otp_code, name=user.name, purpose="signup")
+            return {
+                "status": "otp_required",
+                "email": user.email,
+                "message": "Please verify your email address to access your workspace. A 6-digit OTP has been dispatched."
+            }
+
         return {
             "message": "Login successful (authenticated via Node.js backend)",
             "user": {
@@ -223,6 +530,30 @@ def login(req: LoginRequest, response: Response, db: Session = Depends(get_db)):
 
     # Verify or provision user's dedicated encrypted storage tree on login
     get_user_storage_dirs(user.id, user.name)
+
+    if getattr(user, "is_verified", True) is False:
+        otp_code = f"{secrets.randbelow(1000000):06d}"
+        db.query(OTPVerification).filter(
+            OTPVerification.email == user.email,
+            OTPVerification.otp_type == "signup",
+            OTPVerification.is_used == False
+        ).update({"is_used": True})
+        otp_record = OTPVerification(
+            email=user.email,
+            otp_hash=_hash_otp(otp_code),
+            otp_type="signup",
+            expires_at=datetime.utcnow() + timedelta(minutes=5),
+            is_used=False,
+            attempts=0
+        )
+        db.add(otp_record)
+        db.commit()
+        send_otp_email(to_email=user.email, otp_code=otp_code, name=user.name, purpose="signup")
+        return {
+            "status": "otp_required",
+            "email": user.email,
+            "message": "Please verify your email address to access your workspace. A 6-digit OTP has been dispatched."
+        }
 
     # Ensure user has a workspace
     user_businesses_list = [ub for ub in (user.businesses or []) if ub and ub.business]
@@ -357,6 +688,30 @@ def demo_login(response: Response, db: Session = Depends(get_db)):
 
     # Verify or provision user's dedicated encrypted storage tree on login
     get_user_storage_dirs(user.id, user.name)
+
+    if getattr(user, "is_verified", True) is False:
+        otp_code = f"{secrets.randbelow(1000000):06d}"
+        db.query(OTPVerification).filter(
+            OTPVerification.email == user.email,
+            OTPVerification.otp_type == "signup",
+            OTPVerification.is_used == False
+        ).update({"is_used": True})
+        otp_record = OTPVerification(
+            email=user.email,
+            otp_hash=_hash_otp(otp_code),
+            otp_type="signup",
+            expires_at=datetime.utcnow() + timedelta(minutes=5),
+            is_used=False,
+            attempts=0
+        )
+        db.add(otp_record)
+        db.commit()
+        send_otp_email(to_email=user.email, otp_code=otp_code, name=user.name, purpose="signup")
+        return {
+            "status": "otp_required",
+            "email": user.email,
+            "message": "Please verify your email address to access your workspace. A 6-digit OTP has been dispatched."
+        }
 
     user_businesses = [
         {

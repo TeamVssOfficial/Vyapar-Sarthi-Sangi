@@ -21,6 +21,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(20), default="user", nullable=False)
     is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -172,3 +173,111 @@ class AuditLog(Base):
     action = Column(String(100), nullable=False)
     details = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class OTPVerification(Base):
+    __tablename__ = "otp_verifications"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    email = Column(String(255), index=True, nullable=False)
+    otp_hash = Column(String(255), nullable=False)
+    otp_type = Column(String(50), default="signup")  # 'signup', 'forgot_password'
+    attempts = Column(Integer, default=0)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Workbook(Base):
+    __tablename__ = "workbooks"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    business_id = Column(String(36), ForeignKey("businesses.id", ondelete="CASCADE"), nullable=True, index=True)
+    dataset_id = Column(String(36), ForeignKey("datasets.id", ondelete="SET NULL"), nullable=True, index=True)
+    name = Column(String(255), nullable=False, default="Untitled Workbook")
+    template_type = Column(String(64), nullable=True, default="blank")
+    sheets_json = Column(Text, nullable=False, default="[]")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class SubscriptionPlan(Base):
+    __tablename__ = "subscription_plans"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    code = Column(String(50), unique=True, index=True, nullable=False)  # 'free_trial', 'vyapar_business', 'enterprise'
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    price_inr = Column(Float, default=0.0, nullable=False)
+    billing_cycle = Column(String(50), default="monthly", nullable=False)  # 'trial', 'monthly', 'yearly'
+    is_trial = Column(Boolean, default=False, nullable=False)
+    trial_days_default = Column(Integer, default=7, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    features_json = Column(Text, default='["*"]', nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class UserSubscription(Base):
+    __tablename__ = "user_subscriptions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    business_id = Column(String(36), ForeignKey("businesses.id", ondelete="SET NULL"), nullable=True, index=True)
+    plan_id = Column(String(36), ForeignKey("subscription_plans.id", ondelete="SET NULL"), nullable=True)
+    plan_code = Column(String(50), default="free_trial", nullable=False)
+    status = Column(String(50), default="TRIAL_ACTIVE", nullable=False)  # TRIAL_ACTIVE, TRIAL_EXPIRED, ACTIVE, EXPIRED, CANCELLED, PENDING_PAYMENT
+    trial_start_date = Column(DateTime, nullable=True)
+    trial_end_date = Column(DateTime, nullable=True)
+    current_period_start = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    auto_renew = Column(Boolean, default=False)
+    payment_method = Column(String(50), default="none")  # none, razorpay, admin_comp
+    last_payment_id = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PaymentTransaction(Base):
+    __tablename__ = "payment_transactions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    business_id = Column(String(36), ForeignKey("businesses.id", ondelete="SET NULL"), nullable=True)
+    subscription_id = Column(String(36), ForeignKey("user_subscriptions.id", ondelete="SET NULL"), nullable=True)
+    order_id = Column(String(100), nullable=False, index=True)
+    payment_id = Column(String(100), nullable=True, index=True)
+    signature = Column(String(255), nullable=True)
+    amount_inr = Column(Float, nullable=False)
+    currency = Column(String(10), default="INR")
+    status = Column(String(50), default="PENDING", nullable=False)  # PENDING, SUCCESS, FAILED, CANCELLED
+    provider = Column(String(50), default="razorpay", nullable=False)
+    error_reason = Column(Text, nullable=True)
+    raw_payload_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class TrialExtensionHistory(Base):
+    __tablename__ = "trial_extension_history"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    subscription_id = Column(String(36), ForeignKey("user_subscriptions.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    admin_id = Column(String(36), nullable=False)
+    previous_end_date = Column(DateTime, nullable=True)
+    new_end_date = Column(DateTime, nullable=False)
+    extension_days = Column(Integer, default=0)
+    reason = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AdminSubscriptionAction(Base):
+    __tablename__ = "admin_subscription_actions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    admin_id = Column(String(36), nullable=False, index=True)
+    action_type = Column(String(50), nullable=False)  # modify_trial, configure_plan, manual_activate, revoke_access
+    target_user_id = Column(String(36), nullable=True, index=True)
+    details_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

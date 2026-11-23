@@ -19,6 +19,12 @@ from api import charts
 from api import ml
 from api import ai_chat
 from api import reports
+from api import code_studio
+from api import inventory
+from api import finance
+from api import excel_integration
+from api import auto_agent
+from api import subscriptions
 
 
 @asynccontextmanager
@@ -57,6 +63,12 @@ app.include_router(charts.router)
 app.include_router(ml.router)
 app.include_router(ai_chat.router)
 app.include_router(reports.router)
+app.include_router(code_studio.router)
+app.include_router(inventory.router)
+app.include_router(finance.router)
+app.include_router(excel_integration.router)
+app.include_router(auto_agent.router)
+app.include_router(subscriptions.router)
 
 # Middleware to prevent stale browser caching of frontend static assets
 @app.middleware("http")

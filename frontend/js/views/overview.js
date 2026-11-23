@@ -49,20 +49,14 @@ export async function renderOverview(container) {
             <h1 style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; line-height: 1.25;">
               Vyapar Sarthi Sangi
             </h1>
-            <p style="font-size: 13px; color: #94A3B8; line-height: 1.6; margin-bottom: 22px;">
+            <p style="font-size: 13px; color: #E2E8F0 !important; line-height: 1.6; margin-bottom: 22px;">
               Intelligent business analytics, revenue tracking, and forecasting — designed to help business owners make confident, data-backed decisions.
             </p>
 
             <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-              <!-- Open Analytics Studio Button -->
-              <button id="btn-hero-analytics-studio" class="btn btn-saffron" style="font-size: 13px; padding: 10px 22px; font-weight: 700; box-shadow: 0 4px 12px rgba(233,154,58,0.3);">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                Launch Analytics Studio
-              </button>
-
               <!-- Show Analytics of Everything Modal Button -->
-              <button id="btn-hero-show-all-analytics" class="btn" style="background: rgba(255,255,255,0.12); color: #FFFFFF; border: 1px solid rgba(255,255,255,0.25); font-size: 13px; padding: 10px 20px; font-weight: 700;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E99A3A" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <button id="btn-hero-show-all-analytics" class="btn btn-saffron" style="font-size: 13px; padding: 10px 22px; font-weight: 700; box-shadow: 0 4px 12px rgba(233,154,58,0.35);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                 View Business Summary
               </button>
 
@@ -78,12 +72,12 @@ export async function renderOverview(container) {
           <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 440px;">
             <div style="display: flex; gap: 10px;">
               <div class="os-hud-stat cursor-pointer" id="hud-stat-datasets" title="Click to view datasets">
-                <div style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 700;">Active Datasets</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Active Datasets</div>
                 <div style="font-size: 22px; font-weight: 800; color: #FFFFFF; margin: 4px 0;" id="hud-val-datasets">--</div>
                 <div style="font-size: 11px; color: #38BDF8;">Synced with Cloud</div>
               </div>
               <div class="os-hud-stat cursor-pointer" id="hud-stat-revenue" title="Click to view analytics snapshot">
-                <div style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 700;">Analyzed Revenue</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Analyzed Revenue</div>
                 <div style="font-size: 22px; font-weight: 800; color: var(--saffron); margin: 4px 0;" id="hud-val-revenue">--</div>
                 <div style="font-size: 11px; color: #34D399;">Total Tracked Volume</div>
               </div>
@@ -91,12 +85,12 @@ export async function renderOverview(container) {
 
             <div style="display: flex; gap: 10px;">
               <div class="os-hud-stat">
-                <div style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 700;">Data Health</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Data Health</div>
                 <div style="font-size: 22px; font-weight: 800; color: #10B981; margin: 4px 0;" id="hud-val-score">94.2%</div>
-                <div style="font-size: 11px; color: #94A3B8;">Clean & Reliable</div>
+                <div style="font-size: 11px; color: #E2E8F0 !important;">Clean & Reliable</div>
               </div>
               <div class="os-hud-stat">
-                <div style="font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 700;">Data Privacy</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Data Privacy</div>
                 <div style="font-size: 16px; font-weight: 800; color: #FFFFFF; margin: 6px 0;">Bank-Grade</div>
                 <div style="font-size: 11px; color: #A78BFA;">100% Encrypted & Private</div>
               </div>
@@ -111,434 +105,150 @@ export async function renderOverview(container) {
       <div>
         <div class="os-section-title-wrap" style="display: flex; justify-content: space-between; align-items: center; margin-top: 36px; margin-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.16); padding-bottom: 10px;">
           <div class="os-section-title" style="color: #FFFFFF !important; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-shadow: 0 1px 4px rgba(0,0,0,0.5);">
-            <span style="font-size: 22px;">💼</span> Core Business Studios & Tools
+            <span style="font-size: 22px;">⚡</span> Enterprise AI Operating Suites
           </div>
-          <span class="os-badge-live" style="background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 14px;">● 7 Active Tools Ready</span>
+          <span class="os-badge-live" style="background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 14px;">● 7 Live Operating Suites Active</span>
         </div>
 
         <div class="os-app-grid">
           
-          <!-- App 1: Data Studio & Safe Cleaning -->
-          <div class="os-card" id="app-card-data-studio">
+          <!-- Suite 0: Vyapar Excel Studio -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-excel" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(2,132,199,0.18); color: #0284C7; box-shadow: 0 4px 12px rgba(2,132,199,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon><circle cx="12" cy="17" r="1.5" fill="#0284C7"></circle></svg>
+                <div class="os-app-icon" style="background: rgba(16, 185, 129, 0.18); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.35);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="10" y2="21"></line></svg>
                 </div>
-                <span class="os-badge-live">Live Studio</span>
+                <span style="background: rgba(16, 185, 129, 0.18); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Live Spreadsheets</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Data Studio & Cleaning</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Inspect spreadsheet quality, fix missing fields, remove duplicate records, and clean data safely.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF !important; margin: 12px 0 6px; letter-spacing: -0.2px;">Vyapar Excel Studio</h3>
+              <p style="font-size: 12.5px; color: #E2E8F0 !important; line-height: 1.55; margin-bottom: 16px;">
+                Interactive in-browser spreadsheets with 8 shopkeeper templates, live formula calculation engine, and formatted .xlsx export.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">Data Quality & Cleaning</span>
-              <span style="font-size: 12px; font-weight: 800; color: #0284C7;">Open Data Studio &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);">8 Retail Templates</span>
+              <span style="font-size: 12px; font-weight: 800; color: #34D399;">Open Excel Studio &rarr;</span>
             </div>
           </div>
 
-          <!-- App 2: Analytics Studio (EDA & Deep Intelligence) -->
-          <div class="os-card" id="app-card-analytics-studio">
+          <!-- Suite 1: Business Intelligence -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-bi" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(233,154,58,0.18); color: #E99A3A; box-shadow: 0 4px 12px rgba(233,154,58,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E99A3A" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><circle cx="12" cy="4" r="2.5" fill="#E99A3A"></circle></svg>
+                <div class="os-app-icon" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path><circle cx="12" cy="12" r="2.5" fill="#10B981"></circle></svg>
                 </div>
-                <span class="os-badge-live">Live Studio</span>
+                <span style="background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Model: Strategic Business AI</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Analytics Studio</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Explore sales patterns, build visual charts, discover relationships between metrics, and fix outliers.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF; margin: 12px 0 6px;">Business Intelligence</h3>
+              <p style="font-size: 12px; color: #E2E8F0 !important; line-height: 1.5; margin-bottom: 16px;">
+                Executive cockpit with deterministic revenue, gross margin waterfalls, AOV leaderboards, and AI diagnostic insights from real data.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">Visual Analytics & Charts</span>
-              <span style="font-size: 12px; font-weight: 800; color: var(--saffron);">Launch Studio &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.25);">Live BI Studio</span>
+              <span style="font-size: 11px; font-weight: 800; color: #60A5FA;">Launch Studio &rarr;</span>
             </div>
           </div>
 
-          <!-- App 3: BI Executive Dashboard -->
-          <div class="os-card" id="app-card-bi-dashboard">
+          <!-- Suite 2: Inventory Management -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-inventory" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(16,185,129,0.18); color: #10B981; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path><circle cx="12" cy="12" r="3" fill="#10B981"></circle></svg>
+                <div class="os-app-icon" style="background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line><circle cx="12" cy="12" r="2" fill="#F59E0B"></circle></svg>
                 </div>
-                <span class="os-badge-live">Live Studio</span>
+                <span style="background: rgba(245, 158, 11, 0.15); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Model: Stockout & Reorder AI</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Executive BI Dashboard</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Track total revenue, profit margins, average order value, top-selling categories, and customer leaderboards.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF; margin: 12px 0 6px;">Inventory Management</h3>
+              <p style="font-size: 12px; color: #E2E8F0 !important; line-height: 1.5; margin-bottom: 16px;">
+                Automated stock levels, ABC categorization, low-stock predictive alarms, and automated supplier reorder schedules.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">Revenue & Margins</span>
-              <span style="font-size: 12px; font-weight: 800; color: var(--green);">Launch Dashboard &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(245, 158, 11, 0.12); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.25);">Reorder & Stock AI</span>
+              <span style="font-size: 11px; font-weight: 800; color: #FCD34D;">Manage Stock &rarr;</span>
             </div>
           </div>
 
-          <!-- App 4: Machine Learning Studio -->
-          <div class="os-card" id="app-card-ml-studio">
+          <!-- Suite 3: Finance & P&L -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-finance" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(99,102,241,0.18); color: #6366F1; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"></rect><circle cx="9" cy="9" r="2" fill="#6366F1"></circle><circle cx="15" cy="9" r="2" fill="#6366F1"></circle><circle cx="12" cy="15" r="2" fill="#6366F1"></circle><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="9" x2="12" y2="15"></line><line x1="15" y1="9" x2="12" y2="15"></line></svg>
+                <div class="os-app-icon" style="background: rgba(49, 133, 108, 0.15); color: #34D399; border: 1px solid rgba(49, 133, 108, 0.3);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </div>
-                <span class="os-badge-live">Live Studio</span>
+                <span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Model: Cash Flow & P&L AI</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Predictive Sales & Forecasting</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Forecast upcoming revenue, predict seasonal demand, and segment customer groups with proven models.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF; margin: 12px 0 6px;">Finance & P&L</h3>
+              <p style="font-size: 12px; color: #E2E8F0 !important; line-height: 1.5; margin-bottom: 16px;">
+                Real-time Profit & Loss calculation, working capital burn rates, expense anomalies, and boardroom-ready financial ledgers.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">Sales Forecasting</span>
-              <span style="font-size: 12px; font-weight: 800; color: #6366F1;">Open ML Studio &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(49, 133, 108, 0.12); color: #34D399; border: 1px solid rgba(49, 133, 108, 0.25);">P&L Ledger</span>
+              <span style="font-size: 11px; font-weight: 800; color: #34D399;">Open Ledgers &rarr;</span>
             </div>
           </div>
 
-          <!-- App 5: Sarthi AI Analyst -->
-          <div class="os-card" id="app-card-ai-analyst">
+          <!-- Suite 4: Vyapar AI Sarthi -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-ai" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(236,72,153,0.18); color: #EC4899; box-shadow: 0 4px 12px rgba(236,72,153,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="3"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><circle cx="8" cy="16" r="1.8" fill="#EC4899"></circle><circle cx="16" cy="16" r="1.8" fill="#EC4899"></circle><line x1="10" y1="18" x2="14" y2="18"></line></svg>
+                <div class="os-app-icon" style="background: rgba(236, 72, 153, 0.15); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.3);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><circle cx="8" cy="16" r="1.5" fill="#F472B6"></circle><circle cx="16" cy="16" r="1.5" fill="#F472B6"></circle></svg>
                 </div>
-                <span class="os-badge-live">Live Copilot</span>
+                <span style="background: rgba(236, 72, 153, 0.15); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.3); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Model: Multi-Model Frontier AI</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Vyapar AI Advisor</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Ask plain business questions about sales, margins, or products in English or Hindi and get instant clear answers.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF; margin: 12px 0 6px;">Vyapar AI Sarthi</h3>
+              <p style="font-size: 12px; color: #E2E8F0 !important; line-height: 1.5; margin-bottom: 16px;">
+                Multi-model central copilot (Nemotron & Gemma). Ask sales questions in English/Hindi and get zero-hallucination mathematical answers.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">AI Business Advisor</span>
-              <span style="font-size: 12px; font-weight: 800; color: #EC4899;">Chat with Advisor &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(236, 72, 153, 0.12); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.25);">Growth & Strategy AI</span>
+              <span style="font-size: 11px; font-weight: 800; color: #F472B6;">Chat with Sarthi &rarr;</span>
             </div>
           </div>
 
-          <!-- App 6: Executive Reports & Governance -->
-          <div class="os-card" id="app-card-reports">
+          <!-- Suite 5: Datasets & Cloud Hub -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-datasets" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(225,29,72,0.18); color: #E11D48; box-shadow: 0 4px 12px rgba(225,29,72,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="12" cy="15" r="2.5" fill="#E11D48"></circle><line x1="12" y1="11" x2="12" y2="12"></line></svg>
+                <div class="os-app-icon" style="background: rgba(37, 99, 235, 0.18); color: #38BDF8; border: 1px solid rgba(37, 99, 235, 0.35);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><circle cx="12" cy="12" r="1.5" fill="#38BDF8"></circle></svg>
                 </div>
-                <span class="os-badge-live">Live Reports</span>
+                <span style="background: rgba(37, 99, 235, 0.18); color: #93C5FD; border: 1px solid rgba(37, 99, 235, 0.35); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Cloud Data Hub</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Executive Reports & PDF</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Download clean boardroom PDF summaries and formatted Excel workbooks ready to share with your team.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF !important; margin: 12px 0 6px; letter-spacing: -0.2px;">Datasets & Cloud Hub</h3>
+              <p style="font-size: 12.5px; color: #E2E8F0 !important; line-height: 1.55; margin-bottom: 16px;">
+                Upload, store, and switch between your business CSVs, sales spreadsheets, and inventory sheets with bank-grade privacy.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">Boardroom PDF / Excel</span>
-              <span style="font-size: 12px; font-weight: 800; color: #E11D48;">View Reports &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(37, 99, 235, 0.15); color: #38BDF8; border: 1px solid rgba(37, 99, 235, 0.3);">Bank-Grade Cloud</span>
+              <span style="font-size: 12px; font-weight: 800; color: #38BDF8;">Manage Datasets &rarr;</span>
             </div>
           </div>
 
-          <!-- App 7: Datasets Hub (Data Repository) -->
-          <div class="os-card" id="app-card-datasets">
+          <!-- Suite 6: Data Visualization Studio -->
+          <div class="os-card obsidian-glow-card" id="app-card-suite-analytics" style="background: #0B0F19; border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12); cursor: pointer;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(37,99,235,0.18); color: #2563EB; box-shadow: 0 4px 12px rgba(37,99,235,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><circle cx="12" cy="12" r="1.5" fill="#2563EB"></circle></svg>
+                <div class="os-app-icon" style="background: rgba(233, 154, 58, 0.15); color: #E99A3A; border: 1px solid rgba(233, 154, 58, 0.3);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E99A3A" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><circle cx="12" cy="4" r="2.5" fill="#E99A3A"></circle></svg>
                 </div>
-                <span class="os-badge-live">Live Hub</span>
+                <span style="background: rgba(233, 154, 58, 0.15); color: #FCD34D; border: 1px solid rgba(233, 154, 58, 0.3); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Model: Statistical & Anomaly AI</span>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Datasets & File Hub</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Upload, store, and switch between your business CSVs, sales spreadsheets, and inventory sheets securely.
+              <h3 style="font-size: 16px; font-weight: 800; color: #FFFFFF; margin: 12px 0 6px;">Visual Sales Graphs & EDA</h3>
+              <p style="font-size: 12px; color: #E2E8F0 !important; line-height: 1.5; margin-bottom: 16px;">
+                Shopkeeper-friendly intelligent graph generator covering 7 categories: Sales, Product, Inventory, Finance, Customer, Purchase, Regional.
               </p>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-              <span class="os-metric-pill">Spreadsheets & Cloud</span>
-              <span style="font-size: 12px; font-weight: 800; color: #2563EB;">Manage Datasets &rarr;</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ======================================================= -->
-      <!-- SECTION 2: V2 — AI BUSINESS DEPARTMENTS (LOCKED APPS)   -->
-      <!-- ======================================================= -->
-      <div>
-        <div class="os-section-title-wrap" style="display: flex; justify-content: space-between; align-items: center; margin-top: 42px; margin-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.16); padding-bottom: 10px;">
-          <div class="os-section-title" style="color: #FFFFFF !important; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-shadow: 0 1px 4px rgba(0,0,0,0.5);">
-            <span style="font-size: 22px;">🏢</span> Upcoming Business Modules (Roadmap)
-          </div>
-          <span class="os-badge-locked" style="background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 14px;">✨ In Active Development • Click to Preview</span>
-        </div>
-
-        <div class="os-app-grid">
-          
-          <!-- V2 Dept 1: Finance AI -->
-          <div class="os-card os-card-locked" data-dept="finance" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(245,158,11,0.16); color: #D97706; box-shadow: 0 4px 12px rgba(245,158,11,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path><circle cx="12" cy="12" r="10" stroke-width="1.5" stroke-dasharray="3,3"></circle></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Finance AI</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Automated 12-month cash flow forecasting, P&L anomaly detection, automated GST/tax readiness, and dynamic working capital optimizer.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #D97706;">Cash Flow & P&L AI</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V2 Dept 2: Inventory AI -->
-          <div class="os-card os-card-locked" data-dept="inventory" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(234,88,12,0.16); color: #EA580C; box-shadow: 0 4px 12px rgba(234,88,12,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line><circle cx="12" cy="12" r="2" fill="#EA580C"></circle></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Inventory AI</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Real-time stockout predictor, ABC categorization, dead stock early-warning, and dynamic safety stock level auto-calibration.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #EA580C;">Stockout Predictor</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V2 Dept 3: Sales AI -->
-          <div class="os-card os-card-locked" data-dept="sales" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(239,68,68,0.16); color: #EF4444; box-shadow: 0 4px 12px rgba(239,68,68,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2" fill="#EF4444"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Sales AI</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Predictive lead qualification, funnel conversion bottlenecks, rep quota attainment forecaster, and win-rate maximization models.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #EF4444;">Funnel & Deal Scoring</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V2 Dept 4: Customer Intelligence AI -->
-          <div class="os-card os-card-locked" data-dept="customer" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(168,85,247,0.16); color: #9333EA; box-shadow: 0 4px 12px rgba(168,85,247,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><circle cx="9" cy="7" r="1.5" fill="#9333EA"></circle></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Customer Intelligence AI</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Customer churn risk forecaster, RFM value segmentation, Lifetime Value (LTV) prediction, and high-margin repeat purchase triggers.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #9333EA;">Churn & RFM Segments</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V2 Dept 5: Supplier and Purchase AI -->
-          <div class="os-card os-card-locked" data-dept="supplier" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(13,148,136,0.16); color: #0D9488; box-shadow: 0 4px 12px rgba(13,148,136,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5" fill="#0D9488"></circle><circle cx="18.5" cy="18.5" r="2.5" fill="#0D9488"></circle><line x1="5" y1="8" x2="11" y2="8"></line></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Supplier & Purchase AI</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Vendor reliability scorecard, bulk purchase price negotiation intelligence, lead-time variance tracking, and procurement optimization.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #0D9488;">Procurement & Vendors</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V2 Dept 6: Marketing AI -->
-          <div class="os-card os-card-locked" data-dept="marketing" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(139,92,246,0.16); color: #7C3AED; box-shadow: 0 4px 12px rgba(139,92,246,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><circle cx="6" cy="12" r="1.5" fill="#7C3AED"></circle></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Marketing AI</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Multi-touch campaign attribution, customer acquisition cost (CAC) vs. LTV optimizer, ad-spend efficiency, and automated copy generator.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #7C3AED;">CAC & Attribution ROI</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ======================================================= -->
-      <!-- SECTION 3: V3 — BUSINESS AUTOMATION (LOCKED ENGINES)    -->
-      <!-- ======================================================= -->
-      <div>
-        <div class="os-section-title-wrap" style="display: flex; justify-content: space-between; align-items: center; margin-top: 42px; margin-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.16); padding-bottom: 10px;">
-          <div class="os-section-title" style="color: #FFFFFF !important; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-shadow: 0 1px 4px rgba(0,0,0,0.5);">
-            <span style="font-size: 22px;">⚡</span> Business Automations (Roadmap)
-          </div>
-          <span class="os-badge-locked" style="background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 14px;">✨ In Active Development • Click to Preview</span>
-        </div>
-
-        <div class="os-app-grid">
-          
-          <!-- V3 Auto 1: Automated Workflows -->
-          <div class="os-card os-card-locked" data-auto="workflows" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(217,119,6,0.16); color: #B45309; box-shadow: 0 4px 12px rgba(217,119,6,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2"><circle cx="12" cy="12" r="3" fill="#B45309"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Automated Workflows</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Visual multi-step trigger-action engine. Execute custom operational recipes automatically when business thresholds are crossed.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #B45309;">Event-Driven Logic</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V3 Auto 2: Smart Alerts and Reminders -->
-          <div class="os-card os-card-locked" data-auto="alerts" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(234,179,8,0.16); color: #CA8A04; box-shadow: 0 4px 12px rgba(234,179,8,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CA8A04" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><circle cx="12" cy="3" r="1.5" fill="#CA8A04"></circle><line x1="2" y1="8" x2="4" y2="9"></line><line x1="22" y1="8" x2="20" y2="9"></line></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Smart Alerts & Reminders</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Instant WhatsApp, SMS, and Email alerts on margin drops, sudden sales anomalies, or inventory replenishment urgencies.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #CA8A04;">WhatsApp / Email Triggers</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V3 Auto 3: Purchase Recommendations -->
-          <div class="os-card os-card-locked" data-auto="purchase" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(5,150,105,0.16); color: #059669; box-shadow: 0 4px 12px rgba(5,150,105,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path><polygon points="14 9 15 11 17 11 15.5 12.5 16 15 14 13.5 12 15 12.5 12.5 11 11 13 11 14 9" fill="#059669"></polygon></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Purchase Recommendations</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Algorithmic purchase orders generated based on sales velocity, lead times, vendor pricing tiers, and predicted seasonal surges.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #059669;">Auto Reorder Engine</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V3 Auto 4: Customer Follow-ups -->
-          <div class="os-card os-card-locked" data-auto="followups" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(2,132,199,0.16); color: #0284C7; box-shadow: 0 4px 12px rgba(2,132,199,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path><circle cx="12" cy="12" r="1.5" fill="#0284C7"></circle><circle cx="8" cy="12" r="1.5" fill="#0284C7"></circle><circle cx="16" cy="12" r="1.5" fill="#0284C7"></circle></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Customer Follow-ups</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Automated payment collection reminders, post-purchase feedback loops, and personalized promotional re-engagement sequences.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #0284C7;">Automated Collections & Retention</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V3 Auto 5: Task and Employee Management -->
-          <div class="os-card os-card-locked" data-auto="tasks" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(79,70,229,0.16); color: #4F46E5; box-shadow: 0 4px 12px rgba(79,70,229,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><polyline points="9 11 12 14 22 4"></polyline><line x1="9" y1="16" x2="15" y2="16"></line></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Task & Employee Management</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                AI team capacity planning, daily task delegation, milestone tracking, and autonomous rep productivity scorecards.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #4F46E5;">Capacity & KPI Tracker</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-          <!-- V3 Auto 6: Third-Party Integrations -->
-          <div class="os-card os-card-locked" data-auto="integrations" title="Click to view Coming Soon preview">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div class="os-app-icon" style="background: rgba(147,51,234,0.16); color: #9333EA; box-shadow: 0 4px 12px rgba(147,51,234,0.2);">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line><circle cx="6" cy="12" r="1.5" fill="#9333EA"></circle></svg>
-                </div>
-                <span class="os-badge-locked">🔒 COMING SOON</span>
-              </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">Third-Party Integrations</h3>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Native 2-way sync with TallyPrime, Zoho Books, Shopify, IndiaMART, WhatsApp Business API, GSTN Portal, and QuickBooks.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #9333EA;">Tally, Shopify, GSTN</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-              <p style="font-size: 12px; color: var(--slate); line-height: 1.5; margin-bottom: 16px;">
-                Native 2-way sync with TallyPrime, Zoho Books, Shopify, IndiaMART, WhatsApp Business API, GSTN Portal, and QuickBooks.
-              </p>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-              <span class="os-metric-pill" style="color: #0D9488;">Tally, Shopify, GSTN</span>
-              <span style="font-size: 11px; font-weight: 800; color: #B45309;">🔒 Coming Soon &rarr;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;">
+              <span class="os-metric-pill" style="background: rgba(233, 154, 58, 0.12); color: #FCD34D; border: 1px solid rgba(233, 154, 58, 0.25);">Sales Analytics & EDA</span>
+              <span style="font-size: 11px; font-weight: 800; color: #FCD34D;">Explore Graphs &rarr;</span>
             </div>
           </div>
 
@@ -547,7 +257,7 @@ export async function renderOverview(container) {
 
     </div>
 
-    <!-- ======================================================== -->
+        <!-- ======================================================== -->
     <!-- INTERACTIVE "COMING SOON" MODAL FOR V2 / V3 ROADMAP      -->
     <!-- ======================================================== -->
     <div id="os-dept-modal" class="modal-overlay" style="display: none; z-index: 1000;">
@@ -575,10 +285,10 @@ export async function renderOverview(container) {
               <h2 id="modal-dept-title" style="font-size: 20px; font-weight: 800; color: var(--navy);">Module Name</h2>
             </div>
           </div>
-          <button id="btn-close-dept-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--slate);">&times;</button>
+          <button id="btn-close-dept-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #E2E8F0 !important;">&times;</button>
         </div>
 
-        <div id="modal-dept-desc" style="font-size: 13px; color: var(--slate); line-height: 1.6; margin-bottom: 18px;"></div>
+        <div id="modal-dept-desc" style="font-size: 13px; color: #E2E8F0 !important; line-height: 1.6; margin-bottom: 18px;"></div>
 
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
           <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--navy); margin-bottom: 8px;">Key Capabilities & Architecture:</div>
@@ -586,7 +296,7 @@ export async function renderOverview(container) {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 16px;">
-          <span style="font-size: 12px; color: var(--slate); font-weight: 600;">Status: <span id="modal-dept-status" style="color: #B45309; font-weight: 800;">🚀 Coming Soon (In Active Development)</span></span>
+          <span style="font-size: 12px; color: #E2E8F0 !important; font-weight: 600;">Status: <span id="modal-dept-status" style="color: #B45309; font-weight: 800;">🚀 Coming Soon (In Active Development)</span></span>
           <button id="btn-modal-early-access" class="btn btn-saffron" style="font-size: 12px; padding: 8px 18px;">
             Notify Me When Available
           </button>
@@ -606,10 +316,10 @@ export async function renderOverview(container) {
             </div>
             <div>
               <h2 style="font-size: 20px; font-weight: 800; color: var(--navy);">Business Analytics Snapshot</h2>
-              <p style="font-size: 12px; color: var(--slate);">Summary of key business numbers, datasets, and sales performance.</p>
+              <p style="font-size: 12px; color: #E2E8F0 !important;">Summary of key business numbers, datasets, and sales performance.</p>
             </div>
           </div>
-          <button id="btn-close-analytics-modal" style="background: none; border: none; font-size: 26px; cursor: pointer; color: var(--slate);">&times;</button>
+          <button id="btn-close-analytics-modal" style="background: none; border: none; font-size: 26px; cursor: pointer; color: #E2E8F0 !important;">&times;</button>
         </div>
 
         <div id="all-analytics-body" style="display: flex; flex-direction: column; gap: 20px;">
@@ -711,11 +421,19 @@ export async function renderOverview(container) {
     window.navigateTo(targetRoute);
   };
 
-  document.getElementById("btn-hero-analytics-studio")?.addEventListener("click", () => navigateOrAuth("#analytics-studio"));
+  document.getElementById("btn-hero-analytics-studio")?.addEventListener("click", () => navigateOrAuth("#bi-dashboard"));
+  document.getElementById("app-card-suite-bi")?.addEventListener("click", () => navigateOrAuth("#bi-dashboard"));
+  document.getElementById("app-card-suite-inventory")?.addEventListener("click", () => navigateOrAuth("#inventory"));
+  document.getElementById("app-card-suite-finance")?.addEventListener("click", () => navigateOrAuth("#finance"));
+  document.getElementById("app-card-suite-ai")?.addEventListener("click", () => navigateOrAuth("#ai-assistant"));
+  document.getElementById("app-card-suite-excel")?.addEventListener("click", () => navigateOrAuth("#excel-integration"));
+  document.getElementById("app-card-suite-analytics")?.addEventListener("click", () => navigateOrAuth("#analytics-studio"));
+  document.getElementById("app-card-suite-datasets")?.addEventListener("click", () => navigateOrAuth("#datasets"));
+  document.getElementById("app-card-excel-studio")?.addEventListener("click", () => navigateOrAuth("#excel-integration"));
   document.getElementById("app-card-analytics-studio")?.addEventListener("click", () => navigateOrAuth("#analytics-studio"));
   document.getElementById("app-card-bi-dashboard")?.addEventListener("click", () => navigateOrAuth("#bi-dashboard"));
-  document.getElementById("app-card-ml-studio")?.addEventListener("click", () => navigateOrAuth("#ml-studio"));
-  document.getElementById("app-card-data-studio")?.addEventListener("click", () => navigateOrAuth("#data-studio"));
+  document.getElementById("app-card-ml-studio")?.addEventListener("click", () => navigateOrAuth("#bi-dashboard"));
+  document.getElementById("app-card-data-studio")?.addEventListener("click", () => navigateOrAuth("#auto-analyst"));
   document.getElementById("app-card-ai-analyst")?.addEventListener("click", () => navigateOrAuth("#ai-analyst"));
   document.getElementById("app-card-reports")?.addEventListener("click", () => navigateOrAuth("#reports"));
   document.getElementById("app-card-datasets")?.addEventListener("click", () => navigateOrAuth("#datasets"));
@@ -784,25 +502,25 @@ export async function renderOverview(container) {
     analyticsBody.innerHTML = `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--slate); font-weight: 700;">Consolidated Revenue</div>
+          <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Consolidated Revenue</div>
           <div style="font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px;">${revFormatted}</div>
           <div style="font-size: 11px; color: var(--green); font-weight: 600; margin-top: 4px;">+14.2% Growth Index</div>
         </div>
 
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--slate); font-weight: 700;">Average Order Value (AOV)</div>
+          <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Average Order Value (AOV)</div>
           <div style="font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px;">${aovFormatted}</div>
           <div style="font-size: 11px; color: #6366F1; font-weight: 600; margin-top: 4px;">Commercial Transaction Avg</div>
         </div>
 
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--slate); font-weight: 700;">Total Transactions</div>
+          <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Total Transactions</div>
           <div style="font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px;">${orderCount.toLocaleString()} Orders</div>
-          <div style="font-size: 11px; color: var(--slate); margin-top: 4px;">Processed across datasets</div>
+          <div style="font-size: 11px; color: #E2E8F0 !important; margin-top: 4px;">Processed across datasets</div>
         </div>
 
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--slate); font-weight: 700;">Data Health Score</div>
+          <div style="font-size: 11px; text-transform: uppercase; color: #E2E8F0 !important; font-weight: 700;">Data Health Score</div>
           <div style="font-size: 22px; font-weight: 800; color: #10B981; margin-top: 4px;">87.1 / 100</div>
           <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 4px;">High Quality Benchmark</div>
         </div>
@@ -812,12 +530,12 @@ export async function renderOverview(container) {
       <div style="border: 1px solid #E2E8F0; border-radius: 10px; overflow: hidden; background: #FFFFFF;">
         <div style="background: #F8FAFC; padding: 12px 16px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
           <h4 style="font-size: 13px; font-weight: 800; color: var(--navy);">Connected Spreadsheets & Files (${allDatasets.length})</h4>
-          <span style="font-size: 11px; color: var(--slate); font-weight: 600;">Total Records: ${totalRows.toLocaleString()}</span>
+          <span style="font-size: 11px; color: #E2E8F0 !important; font-weight: 600;">Total Records: ${totalRows.toLocaleString()}</span>
         </div>
         <div style="max-height: 220px; overflow-y: auto;">
           <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
             <thead>
-              <tr style="background: #F1F5F9; color: var(--slate); text-align: left;">
+              <tr style="background: #F1F5F9; color: #E2E8F0 !important; text-align: left;">
                 <th style="padding: 10px 14px;">Dataset Name</th>
                 <th style="padding: 10px 14px;">Records</th>
                 <th style="padding: 10px 14px;">Columns</th>
@@ -837,7 +555,7 @@ export async function renderOverview(container) {
                   </td>
                 </tr>
               `).join("") || `
-                <tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--slate);">No datasets uploaded yet. Upload a CSV or Excel file to see live metrics.</td></tr>
+                <tr><td colspan="5" style="padding: 20px; text-align: center; color: #E2E8F0 !important;">No datasets uploaded yet. Upload a CSV or Excel file to see live metrics.</td></tr>
               `}
             </tbody>
           </table>

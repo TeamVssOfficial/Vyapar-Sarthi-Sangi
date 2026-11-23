@@ -42,7 +42,7 @@ export function invalidateApiCache(prefix = "") {
 
 export const API = {
   getToken() {
-    const t = localStorage.getItem("vss_token");
+    const t = localStorage.getItem("vss_token") || localStorage.getItem("token");
     if (!t || t === "null" || t === "undefined") return null;
     return t;
   },
@@ -116,7 +116,22 @@ export const API = {
         let errMessage = `Error ${response.status}: ${response.statusText}`;
         try {
           const errData = await response.json();
-          errMessage = errData.detail || errData.message || JSON.stringify(errData);
+          if (errData && errData.detail && (errData.detail.code === "SUBSCRIPTION_EXPIRED" || errData.detail.code === "NO_SUBSCRIPTION")) {
+            window.dispatchEvent(new CustomEvent("vss:subscription_expired", { detail: errData.detail }));
+          }
+          if (typeof errData.detail === "string") {
+            errMessage = errData.detail;
+          } else if (Array.isArray(errData.detail)) {
+            errMessage = errData.detail.map(d => (d && (d.msg || d.message)) ? `${d.loc ? d.loc.join('.') + ': ' : ''}${d.msg || d.message}` : (typeof d === "string" ? d : JSON.stringify(d))).join("; ");
+          } else if (typeof errData.detail === "object" && errData.detail !== null) {
+            errMessage = errData.detail.message || errData.detail.msg || JSON.stringify(errData.detail);
+          } else if (errData.message) {
+            errMessage = typeof errData.message === "object" ? JSON.stringify(errData.message) : String(errData.message);
+          } else if (typeof errData === "string") {
+            errMessage = errData;
+          } else {
+            errMessage = JSON.stringify(errData);
+          }
         } catch (e) {}
         throw new Error(errMessage);
       }
@@ -136,6 +151,31 @@ export const API = {
   register(payload) {
     invalidateApiCache();
     return this.request("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  verifyOTP(payload) {
+    invalidateApiCache();
+    return this.request("/api/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  resendOTP(payload) {
+    return this.request("/api/auth/resend-otp", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  forgotPassword(payload) {
+    return this.request("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  resetPassword(payload) {
+    return this.request("/api/auth/reset-password", {
       method: "POST",
       body: JSON.stringify(payload)
     });
@@ -296,16 +336,280 @@ export const API = {
   },
 
   // Reports
-  generateReport(datasetId, reportType, title = null) {
+  generateReport(datasetId, reportType, options = {}) {
+    let payload = { report_type: reportType };
+    if (typeof options === "string") {
+      payload.title = options;
+    } else if (typeof options === "object" && options !== null) {
+      payload = { ...payload, ...options };
+    }
     return this.request(`/api/reports/${datasetId}/generate`, {
       method: "POST",
-      body: JSON.stringify({ report_type: reportType, title })
+      body: JSON.stringify(payload)
     });
   },
   listReports(datasetId) {
     return this.request(`/api/reports/${datasetId}`);
   },
   getDownloadUrl(reportId) {
-    return `${API_BASE}/api/reports/${reportId}/download`;
+    const token = this.getToken();
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+    return `${API_BASE}/api/reports/${reportId}/download${tokenParam}`;
+  },
+  async downloadReportFile(reportId, fallbackName = "Executive_Report") {
+    const token = this.getToken();
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+    const url = `${API_BASE}/api/reports/${reportId}/download${tokenParam}`;
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const bizId = this.getActiveBusinessId();
+    if (bizId) headers["X-Business-Id"] = bizId;
+
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.detail || `Download failed with HTTP ${res.status}`);
+    }
+    const blob = await res.blob();
+    const contentDisposition = res.headers.get("content-disposition");
+    let filename = fallbackName;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename=["']?([^"';]+)["']?/);
+      if (match && match[1]) filename = match[1].trim();
+    }
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+  },
+
+  // OpenRouter Multi-Model Central Brain
+  getAIModels() {
+    return this.request("/api/ai/models");
+  },
+  chatCentralAI(payload) {
+    return this.request("/api/ai/chat", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  getAIConversations(datasetId = null) {
+    const url = datasetId ? `/api/ai/conversations?dataset_id=${encodeURIComponent(datasetId)}` : "/api/ai/conversations";
+    return this.request(url);
+  },
+  createAIConversation(title, datasetId = null) {
+    return this.request("/api/ai/conversations", {
+      method: "POST",
+      body: JSON.stringify({ title, dataset_id: datasetId })
+    });
+  },
+  deleteAIConversation(conversationId) {
+    return this.request(`/api/ai/conversations/${conversationId}`, {
+      method: "DELETE"
+    });
+  },
+  renameAIConversation(conversationId, title) {
+    return this.request(`/api/ai/conversations/${conversationId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title })
+    });
+  },
+  benchmarkAI(models = []) {
+    return this.request("/api/ai/benchmark", {
+      method: "POST",
+      body: JSON.stringify({ models })
+    });
+  },
+
+  // AI Code Studio
+  generateCode(datasetId, instruction, targetLibrary = "pandas") {
+    return this.request(`/api/code-studio/${datasetId}/generate`, {
+      method: "POST",
+      body: JSON.stringify({ instruction, target_library: targetLibrary })
+    });
+  },
+  executeCode(datasetId, code) {
+    return this.request(`/api/code-studio/${datasetId}/execute`, {
+      method: "POST",
+      body: JSON.stringify({ code })
+    });
+  },
+  getCodeHistory(datasetId) {
+    return this.request(`/api/code-studio/${datasetId}/history`);
+  },
+
+  // Inventory Management
+  getInventorySummary() {
+    return this.request("/api/inventory/summary");
+  },
+  recordStockMovement(payload) {
+    return this.request("/api/inventory/movements", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  createProduct(payload) {
+    return this.request("/api/inventory/products", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  syncInventoryFromDataset(datasetId) {
+    return this.request(`/api/inventory/sync-from-dataset/${datasetId}`, {
+      method: "POST"
+    });
+  },
+
+  // Finance Management
+  getFinanceSummary() {
+    return this.request("/api/finance/summary");
+  },
+  recordTransaction(payload) {
+    return this.request("/api/finance/transactions", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  getCashFlow() {
+    return this.request("/api/finance/cash-flow");
+  },
+  syncFinanceFromDataset(datasetId) {
+    return this.request(`/api/finance/sync-from-dataset/${datasetId}`, {
+      method: "POST"
+    });
+  },
+
+  // Vyapar Excel Studio
+  listWorkbooks() {
+    return this.request("/api/excel/workbooks");
+  },
+  createWorkbook(data) {
+    return this.request("/api/excel/workbooks", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+  getWorkbook(workbookId) {
+    return this.request(`/api/excel/workbooks/${workbookId}`);
+  },
+  updateWorkbook(workbookId, data) {
+    return this.request(`/api/excel/workbooks/${workbookId}`, {
+      method: "PUT",
+      body: JSON.stringify(data)
+    });
+  },
+  deleteWorkbook(workbookId) {
+    return this.request(`/api/excel/workbooks/${workbookId}`, {
+      method: "DELETE"
+    });
+  },
+  getWorkbookTemplate(templateType) {
+    return this.request(`/api/excel/workbooks/templates/${templateType}`);
+  },
+  importFileToWorkbook(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.request("/api/excel/workbooks/import-file", {
+      method: "POST",
+      body: formData
+    });
+  },
+  async exportWorkbookXLSX(payload) {
+    const res = await this.request("/api/excel/workbooks/export-xlsx", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    if (res instanceof Response) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(payload.name || "Vyapar_Workbook").replace(/\s+/g, "_")}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return { success: true };
+    }
+    return res;
+  },
+  askAIExcelAssistant(payload) {
+    return this.request("/api/excel/assistant", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  getWorkbookSheets(datasetId) {
+    return this.request(`/api/excel/workbooks/${datasetId}/sheets`);
+  },
+  getExcelExportUrl(datasetId) {
+    return `${API_BASE}/api/excel/workbooks/${datasetId}/export`;
+  },
+
+  // Fully Automated AI Data Science Agent
+  analyzeDatasetAutomatically(datasetId) {
+    return this.request(`/api/auto-agent/analyze/${datasetId}`, { method: "POST" });
+  },
+  getAutomatedAnalysisResults(datasetId) {
+    return this.request(`/api/auto-agent/results/${datasetId}`);
+  },
+  getDownloadCleanedUrl(datasetId) {
+    return `${API_BASE}/api/auto-agent/download-cleaned/${datasetId}`;
+  },
+
+  // Subscription & Free Trial Management
+  getSubscriptionPlans() {
+    return this.request("/api/subscriptions/plans");
+  },
+  getCurrentSubscription() {
+    return this.request("/api/subscriptions/current");
+  },
+  startFreeTrial(businessId) {
+    invalidateApiCache();
+    return this.request("/api/subscriptions/start-trial", {
+      method: "POST",
+      body: JSON.stringify({ business_id: businessId || null })
+    });
+  },
+  createSubscriptionOrder(businessId, planCode = "vyapar_business") {
+    return this.request("/api/subscriptions/create-order", {
+      method: "POST",
+      body: JSON.stringify({ business_id: businessId || null, plan_code: planCode })
+    });
+  },
+  verifySubscriptionPayment(payload) {
+    invalidateApiCache();
+    return this.request("/api/subscriptions/verify-payment", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  getAdminSubscriptionOverview() {
+    return this.request("/api/subscriptions/admin/overview");
+  },
+  getAdminSubscriptionUsers(search = "", statusFilter = "ALL", page = 1, limit = 50) {
+    const params = new URLSearchParams({ search, status_filter: statusFilter, page: String(page), limit: String(limit) });
+    return this.request(`/api/subscriptions/admin/users?${params.toString()}`);
+  },
+  modifyUserTrial(payload) {
+    invalidateApiCache();
+    return this.request("/api/subscriptions/admin/modify-trial", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  configureSubscriptionPlan(payload) {
+    invalidateApiCache();
+    return this.request("/api/subscriptions/admin/configure-plan", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  getAdminExtensionsLog(limit = 50) {
+    return this.request(`/api/subscriptions/admin/extensions-log?limit=${limit}`);
   }
 };
