@@ -100,6 +100,48 @@ def stream_encrypt_file(src_path: Path, dst_path: Path) -> int:
     return total_written
 
 
+def stream_encrypt_parts_and_count(part_paths: list[Path], dst_path: Path) -> tuple[int, int]:
+    """
+    Single-pass streaming AES-256-CTR encryption across ordered chunk part files.
+    Counts newlines during the same pass and deletes each part file immediately after reading
+    to minimize disk usage and eliminate extra passes for up to 10GB+ files.
+    Returns (encrypted_bytes_written, estimated_line_count).
+    """
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    nonce = os.urandom(16)
+    cipher = Cipher(algorithms.AES(_AES_KEY), modes.CTR(nonce))
+    encryptor = cipher.encryptor()
+
+    total_written = 0
+    newline_count = 0
+    with open(dst_path, "wb") as fout:
+        fout.write(STREAM_MAGIC)
+        fout.write(nonce)
+        total_written += len(STREAM_MAGIC) + len(nonce)
+
+        for part_path in part_paths:
+            with open(part_path, "rb") as fin:
+                while True:
+                    chunk = fin.read(STREAM_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    newline_count += chunk.count(b"\n")
+                    enc_chunk = encryptor.update(chunk)
+                    fout.write(enc_chunk)
+                    total_written += len(enc_chunk)
+            try:
+                part_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        final_chunk = encryptor.finalize()
+        if final_chunk:
+            fout.write(final_chunk)
+            total_written += len(final_chunk)
+
+    return total_written, max(0, newline_count - 1)
+
+
 def _stream_decrypt_prefix_bytes(src_path: Path, max_bytes: int | None = None) -> bytes:
     """
     Decrypts up to max_bytes from a VSS_STREAM_V1 file without loading the entire file into RAM.

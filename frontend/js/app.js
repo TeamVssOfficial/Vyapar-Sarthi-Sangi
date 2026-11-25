@@ -306,15 +306,16 @@ function setupGlobalModals() {
       if (submitBtn) submitBtn.disabled = true;
 
       try {
-        const result = await API.uploadDataset(formData, (pct, loaded, total, phase) => {
+        const result = await API.uploadDataset(formData, (pct, loaded, total, phase, speedMBs = 0) => {
           if (progBar) progBar.style.width = `${pct}%`;
           if (progPct) progPct.innerText = `${pct}%`;
           if (progText) {
             const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
             const totalMB = (total / (1024 * 1024)).toFixed(1);
+            const speedTag = speedMBs > 0 ? ` • ${speedMBs.toFixed(1)} MB/s` : "";
             progText.innerText = phase === "finalizing"
               ? "Stream-encrypting & indexing rows..."
-              : `Uploading ${loadedMB} MB / ${totalMB} MB`;
+              : `Uploading ${loadedMB} MB / ${totalMB} MB${speedTag}`;
           }
         });
         statusDiv.style.background = "#ECFDF5";
