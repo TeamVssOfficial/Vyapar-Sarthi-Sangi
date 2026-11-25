@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     # Storage
     STORAGE_DIR: Path = PROJECT_DIR / "storage"
 
-    # Upload limits
-    MAX_UPLOAD_SIZE_MB: int = 100
+    # Upload limits (10 GB = 10240 MB)
+    MAX_UPLOAD_SIZE_MB: int = 10240
 
     # Node.js auth service integration
     NODE_BACKEND_URL: str = "http://localhost:3000"

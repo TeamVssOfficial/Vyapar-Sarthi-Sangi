@@ -170,8 +170,18 @@
           <div id="file-drop-card" style="border: 2px dashed #CBD5E1; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; background: #F8FAFC;">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E99A3A" stroke-width="2" style="margin: 0 auto 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             <div id="file-selected-label" style="font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 4px;">Click to Browse or Drag File Here</div>
-            <div style="font-size: 11px; color: var(--slate);">Supports .csv, .xlsx, .xls (Up to 100MB)</div>
-            <input type="file" id="direct-file-input" accept=".csv,.xlsx,.xls" style="display: none;" />
+            <div style="font-size: 11px; color: var(--slate);">Supports .csv, .tsv, .xlsx, .xls, .json (Up to 10 GB • Zero-OOM Streaming)</div>
+            <input type="file" id="direct-file-input" accept=".csv,.tsv,.xlsx,.xls,.json" style="display: none;" />
+          </div>
+        </div>
+
+        <div id="direct-upload-progress-wrap" style="display: none;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 4px;">
+            <span id="direct-upload-progress-text">Uploading...</span>
+            <span id="direct-upload-progress-pct">0%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #E2E8F0; border-radius: 99px; overflow: hidden;">
+            <div id="direct-upload-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #E99A3A, #10B981); transition: width 0.2s ease;"></div>
           </div>
         </div>
 

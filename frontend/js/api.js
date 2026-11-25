@@ -229,11 +229,89 @@ export const API = {
   getDataset(datasetId, previewRows = 50) {
     return cachedRequest(`ds_preview_${datasetId}_${previewRows}`, () => this.request(`/api/datasets/${datasetId}?preview_rows=${previewRows}`), 10000);
   },
-  uploadDataset(formData) {
+  async uploadDataset(formData, onProgress = null) {
     invalidateApiCache();
-    return this.request("/api/upload/", {
-      method: "POST",
-      body: formData
+    const file = formData.get("file");
+    const name = formData.get("name") || "";
+    const CHUNK_THRESHOLD = 10 * 1024 * 1024; // 10 MB -> automatically switch to chunked streaming
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB chunks
+
+    if (file && file.size > CHUNK_THRESHOLD) {
+      // 1. Initialize chunked upload session
+      const initRes = await this.request("/api/upload/chunk/init", {
+        method: "POST",
+        body: JSON.stringify({
+          filename: file.name,
+          total_size: file.size,
+          name: name || null
+        })
+      });
+      const uploadId = initRes.upload_id;
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+      // 2. Stream 5MB chunks sequentially
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(file.size, start + CHUNK_SIZE);
+        const slice = file.slice(start, end);
+
+        const partForm = new FormData();
+        partForm.append("upload_id", uploadId);
+        partForm.append("chunk_index", String(i));
+        partForm.append("chunk", slice, `${file.name}.part${i}`);
+
+        await this.request("/api/upload/chunk/part", {
+          method: "POST",
+          body: partForm
+        });
+
+        if (onProgress) {
+          const pct = Math.min(95, Math.round((end / file.size) * 95));
+          onProgress(pct, end, file.size, "uploading");
+        }
+      }
+
+      // 3. Finalize & stream-encrypt on server
+      if (onProgress) onProgress(97, file.size, file.size, "finalizing");
+      const finalRes = await this.request("/api/upload/chunk/complete", {
+        method: "POST",
+        body: JSON.stringify({ upload_id: uploadId })
+      });
+      if (onProgress) onProgress(100, file.size, file.size, "done");
+      return finalRes;
+    }
+
+    // Standard fast upload with XHR progress for <=10MB files
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_BASE}/api/upload/`);
+      const token = this.getToken();
+      if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      const bizId = this.getActiveBusinessId();
+      if (bizId) xhr.setRequestHeader("X-Business-Id", bizId);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          const pct = Math.min(96, Math.round((e.loaded / e.total) * 96));
+          onProgress(pct, e.loaded, e.total, "uploading");
+        }
+      };
+
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText || "{}");
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (onProgress) onProgress(100, file?.size || 1, file?.size || 1, "done");
+            resolve(data);
+          } else {
+            reject(new Error(data.detail || data.message || `Upload failed (${xhr.status})`));
+          }
+        } catch (err) {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload."));
+      xhr.send(formData);
     });
   },
   deleteDataset(datasetId) {

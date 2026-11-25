@@ -44,8 +44,8 @@ export async function renderDatasets(container) {
               <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-[#E99A3A] transition cursor-pointer bg-slate-50">
                 <i data-lucide="file-up" class="w-10 h-10 text-[#E99A3A] mx-auto mb-2"></i>
                 <div class="text-sm font-medium text-[#14233D] mb-1" id="file-chosen-text">Click to browse or drop file here</div>
-                <p class="text-xs text-slate-400">Supported formats: CSV, XLSX, XLS (Max 100MB)</p>
-                <input type="file" id="file-input" accept=".csv,.xlsx,.xls" class="hidden" />
+                <p class="text-xs text-slate-400">Supported formats: CSV, TSV, XLSX, XLS, JSON (Up to 10 GB)</p>
+                <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls,.json" class="hidden" />
               </div>
             </div>
 
@@ -144,7 +144,7 @@ export async function renderDatasets(container) {
 
     errBox.classList.add("hidden");
     progressContainer.classList.remove("hidden");
-    progressBar.style.width = "40%";
+    progressBar.style.width = "5%";
     submitBtn.disabled = true;
 
     try {
@@ -152,8 +152,9 @@ export async function renderDatasets(container) {
       formData.append("file", file);
       if (name.trim()) formData.append("name", name.trim());
 
-      progressBar.style.width = "75%";
-      const res = await API.uploadDataset(formData);
+      const res = await API.uploadDataset(formData, (pct) => {
+        progressBar.style.width = `${pct}%`;
+      });
       progressBar.style.width = "100%";
 
       API.setActiveDatasetId(res.dataset_id);

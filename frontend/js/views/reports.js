@@ -41,7 +41,10 @@ export async function renderReports(container) {
             </p>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button id="btn-copy-whatsapp-summary" class="btn" style="background: #25D366; color: #FFFFFF; border: none; font-size: 12.5px; padding: 8px 16px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; cursor: pointer;">
+            <span>📱</span> Copy WhatsApp Summary
+          </button>
           <button onclick="window.navigateTo('#overview')" class="btn btn-outline" style="font-size: 12.5px; padding: 8px 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
             <span>&larr;</span> Back to Business OS
           </button>
@@ -356,6 +359,40 @@ export async function renderReports(container) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
           <span>Generate Multi-Tab Excel Workbook</span>
         `;
+      }
+    };
+  }
+
+  // 1-Click WhatsApp Business Summary Copy
+  const btnWa = container.querySelector("#btn-copy-whatsapp-summary");
+  if (btnWa) {
+    btnWa.onclick = async () => {
+      const orig = btnWa.innerHTML;
+      btnWa.innerHTML = `<span>⏳</span> Preparing Summary...`;
+      try {
+        const kpis = await API.getBIKPIs(activeDatasetId);
+        const h = kpis?.headline_metrics || {};
+        const cats = (kpis?.category_breakdown || []).slice(0, 3);
+        const topLines = cats.map((c, idx) => `  ${idx + 1}. ${c.category}: ₹${Number(c.revenue || 0).toLocaleString("en-IN")} (${c.share_pct}%)`).join("\n");
+        const dsName = document.getElementById("top-active-dataset-name")?.innerText || "Active Dataset";
+
+        const waText = [
+          `📊 *VYAPAR VERSE — EXECUTIVE BRIEFING*`,
+          `📁 *Dataset:* ${dsName}`,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `💰 *Total Revenue:* ₹${Number(h.total_revenue || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
+          `📦 *Total Orders:* ${Number(h.total_transactions || 0).toLocaleString("en-IN")}`,
+          `🧾 *Avg Ticket (AOV):* ₹${Number(h.average_order_value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
+          cats.length ? `\n🏆 *Top Categories:*\n${topLines}` : "",
+          `\n✅ _Verified by VSS AI Zero-Hallucination Engine_`
+        ].filter(Boolean).join("\n");
+
+        await navigator.clipboard.writeText(waText);
+        showStatus("✓ WhatsApp Business Summary copied to clipboard! Ready to paste in WhatsApp.", "success");
+      } catch (err) {
+        showStatus(`Could not copy summary: ${err.message}`, "error");
+      } finally {
+        btnWa.innerHTML = orig;
       }
     };
   }

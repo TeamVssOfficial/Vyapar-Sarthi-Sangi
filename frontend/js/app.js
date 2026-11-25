@@ -246,8 +246,12 @@ function setupGlobalModals() {
 
   function updateSelectedFileLabel(file) {
     if (!file || !fileLabel) return;
-    const sizeKB = (file.size / 1024).toFixed(1);
-    fileLabel.innerHTML = `<span style="color: var(--navy); font-weight: 700;">${file.name}</span> <span style="color: var(--saffron);">(${sizeKB} KB)</span>`;
+    const sizeStr = file.size >= 1024 * 1024 * 1024
+      ? `${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB`
+      : file.size >= 1024 * 1024
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+        : `${(file.size / 1024).toFixed(1)} KB`;
+    fileLabel.innerHTML = `<span style="color: var(--navy); font-weight: 700;">${file.name}</span> <span style="color: var(--saffron);">(${sizeStr})</span>`;
   }
 
   // Upload Form Submission
@@ -257,13 +261,17 @@ function setupGlobalModals() {
       e.preventDefault();
       const statusDiv = document.getElementById("direct-upload-status");
       const submitBtn = document.getElementById("btn-submit-direct-upload");
+      const progWrap = document.getElementById("direct-upload-progress-wrap");
+      const progBar = document.getElementById("direct-upload-progress-bar");
+      const progText = document.getElementById("direct-upload-progress-text");
+      const progPct = document.getElementById("direct-upload-progress-pct");
 
       const file = fileInput?.files?.[0];
       if (!file) {
         statusDiv.style.display = "block";
         statusDiv.style.background = "#FEE2E2";
         statusDiv.style.color = "#DC2626";
-        statusDiv.innerText = "Please select a CSV or Excel file to upload.";
+        statusDiv.innerText = "Please select a CSV, TSV, Excel, or JSON file to upload.";
         return;
       }
 
@@ -290,21 +298,37 @@ function setupGlobalModals() {
       statusDiv.style.display = "block";
       statusDiv.style.background = "#EFF6FF";
       statusDiv.style.color = "#1E40AF";
-      statusDiv.innerText = "Ingesting, detecting schema, and profiling dataset... Please wait.";
+      statusDiv.innerText = "Streaming dataset to vault & profiling schema... Please wait.";
+      if (progWrap) progWrap.style.display = "block";
+      if (progBar) progBar.style.width = "2%";
+      if (progPct) progPct.innerText = "2%";
+      if (progText) progText.innerText = "Starting upload...";
       if (submitBtn) submitBtn.disabled = true;
 
       try {
-        const result = await API.uploadDataset(formData);
+        const result = await API.uploadDataset(formData, (pct, loaded, total, phase) => {
+          if (progBar) progBar.style.width = `${pct}%`;
+          if (progPct) progPct.innerText = `${pct}%`;
+          if (progText) {
+            const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
+            const totalMB = (total / (1024 * 1024)).toFixed(1);
+            progText.innerText = phase === "finalizing"
+              ? "Stream-encrypting & indexing rows..."
+              : `Uploading ${loadedMB} MB / ${totalMB} MB`;
+          }
+        });
         statusDiv.style.background = "#ECFDF5";
         statusDiv.style.color = "#065F46";
-        statusDiv.innerText = `Dataset '${result.name}' successfully uploaded and profiled (${result.row_count} rows, ${result.column_count} columns)!`;
+        statusDiv.innerText = `Dataset '${result.name}' successfully uploaded and profiled (${Number(result.row_count).toLocaleString()} rows, ${result.column_count} columns)!`;
 
-        API.setActiveDatasetId(result.id);
-        window.dispatchEvent(new CustomEvent("vss:dataset-changed", { detail: { id: result.id } }));
+        const dsId = result.dataset_id || result.id;
+        API.setActiveDatasetId(dsId);
+        window.dispatchEvent(new CustomEvent("vss:dataset-changed", { detail: { id: dsId } }));
 
         setTimeout(() => {
           closeDirectUploadModal();
           uploadForm.reset();
+          if (progWrap) progWrap.style.display = "none";
           if (fileLabel) fileLabel.innerText = "Click to Browse or Drag File Here";
           statusDiv.style.display = "none";
           if (submitBtn) submitBtn.disabled = false;
